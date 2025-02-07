@@ -5,6 +5,7 @@ import { parseEnergyManipulation } from './effects/energy-manipulation';
 import { parseCountDamage } from './effects/count-damage';
 import { parseDamageModifier } from './effects/damage-modifier';
 import { parseConditionCheck } from './effects/condition-check';
+import { parseAbility } from './effects/ability';
 
 // Types for different effect components
 export enum EffectType {
@@ -48,6 +49,18 @@ export interface Effect {
     comparison: 'equal' | 'not-equal' | 'greater' | 'less';
   };
   result?: 'fail' | 'success';
+  timing?: {
+    type: 'once-per-turn' | 'on-evolution' | 'on-play' | 'continuous';
+    restriction?: {
+      type: 'ability-not-used' | 'pokemon-condition' | 'field-condition';
+      abilityName?: string;
+      condition?: string;
+    };
+  };
+  shuffle?: boolean;
+  source?: 'deck' | 'hand' | 'discard' | 'bench' | 'active';
+  destination?: 'deck' | 'hand' | 'discard' | 'bench' | 'active';
+  selection?: 'choose' | 'random' | 'all';
 }
 
 interface TokenizedPhrase {
@@ -79,6 +92,12 @@ export async function parseEffectText(text: string): Promise<Effect[]> {
 }
 
 function parsePhrase(phrase: TokenizedPhrase): Effect | null {
+  // Try ability first
+  const ability = parseAbility(phrase);
+  if (ability) {
+    return ability;
+  }
+
   // Try condition check first
   const conditionCheck = parseConditionCheck(phrase);
   if (conditionCheck) {
