@@ -33,17 +33,13 @@ export async function parseEffectText(text: string): Promise<Effect[]> {
   const tokenizer = await getTokenizer();
   const effects: Effect[] = [];
 
-  // Split text into sentences, but keep the brackets content with its sentence
-  const sentences = text
-    .split(/。(?!］)/) // Split on periods that aren't followed by a closing bracket
-    .map(s => s.trim())
-    .filter(Boolean);
-
-  // Tokenize each sentence
-  const phrases: TokenizedPhrase[] = sentences.map(sentence => ({
-    text: sentence.trim(),
-    tokens: tokenizer.tokenize(sentence),
-  }));
+  // Process the entire text as one unit if it contains brackets
+  const phrases: TokenizedPhrase[] = [
+    {
+      text: text,
+      tokens: tokenizer.tokenize(text),
+    },
+  ];
 
   // Process each phrase
   for (const phrase of phrases) {
@@ -113,13 +109,17 @@ function parsePhrase(phrase: TokenizedPhrase): Effect | null {
         if (countMatch) {
           effect.count = parseInt(countMatch[1]);
         }
+
+        // Look for bracketed text and check for weakness/resistance rule
+        const bracketMatch = text.match(/［([^］]+)］/);
+        if (bracketMatch) {
+          const bracketContent = bracketMatch[1];
+          if (bracketContent.includes('弱点・抵抗力を計算しない')) {
+            effect.ignoreWeaknessResistance = true;
+          }
+        }
       } else {
         effect.location = 'active';
-      }
-
-      // Check for ignore weakness/resistance in the same text
-      if (text.includes('弱点・抵抗力を計算しない')) {
-        effect.ignoreWeaknessResistance = true;
       }
 
       return effect;
