@@ -1,6 +1,21 @@
 import { NextResponse } from 'next/server';
 import puppeteer from 'puppeteer';
 
+enum EnergyType {
+  Normal = 'normal',
+  Fighting = 'fighting',
+  Fire = 'fire',
+  Water = 'water',
+  Lightning = 'lightning',
+  Psychic = 'psychic',
+  Grass = 'grass',
+  Darkness = 'darkness',
+  Metal = 'metal',
+  Fairy = 'fairy',
+  Dragon = 'dragon',
+  Colorless = 'none', // matches with icon-none in the HTML
+}
+
 interface CardDetails {
   name: string; // バケッチャ
   cardId: string; // XY4 043 / 088
@@ -31,6 +46,7 @@ interface Move {
   damage: string;
   description: string;
   energyCount: number;
+  energyTypes: EnergyType[];
 }
 
 export async function GET(
@@ -119,6 +135,15 @@ export async function GET(
               // Get energy icons count
               const energyCount = el.querySelectorAll('.icon').length;
 
+              // Get energy types from icons
+              const energyTypes = Array.from(el.querySelectorAll('.icon')).map(
+                icon => {
+                  const className = icon.className;
+                  const typeMatch = className.match(/icon-(\w+)/);
+                  return (typeMatch?.[1] as EnergyType) || EnergyType.Colorless;
+                }
+              );
+
               // Get name by removing the damage part
               const name = cleanText(
                 moveText.replace(damageEl?.textContent || '', '')
@@ -129,6 +154,7 @@ export async function GET(
                 damage,
                 description: '',
                 energyCount,
+                energyTypes,
               });
             } else if (el.tagName === 'P' && acc.length > 0) {
               // Add description to the last move
