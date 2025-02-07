@@ -25,4 +25,4 @@ async function fetchCardEffects(startId: number, endId: number) {
   effects.forEach(effect => console.log('\n---\n' + effect));
 }
 
-fetchCardEffects(47190, 47200);
+fetchCardEffects(47186, 47186);

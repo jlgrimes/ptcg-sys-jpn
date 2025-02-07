@@ -7,6 +7,8 @@ import { parseDamageModifier } from './effects/damage-modifier';
 import { parseConditionCheck } from './effects/condition-check';
 import { parseAbility } from './effects/ability';
 import { parseBenchPlacement } from './effects/bench-placement';
+import { parseDiscardDraw } from './effects/discard-draw';
+import { parseStatus } from './effects/status';
 
 // Types for different effect components
 export enum EffectType {
@@ -64,6 +66,17 @@ export interface Effect {
   destination?: 'deck' | 'hand' | 'discard' | 'bench' | 'active';
   selection?: 'choose' | 'random' | 'all';
   cardType?: 'basic' | 'stage1' | 'stage2' | 'ex' | 'vmax';
+  effect?: {
+    type: 'immunity' | 'ignore';
+    what: 'ability' | 'effects';
+    target: 'self' | 'opponent';
+  };
+  coinFlip?: {
+    count: number;
+    onHeads?: Effect;
+    onTails?: Effect;
+  };
+  status?: 'paralyzed' | 'asleep' | 'confused' | 'burned' | 'poisoned';
 }
 
 interface TokenizedPhrase {
@@ -75,7 +88,6 @@ export async function parseEffectText(text: string): Promise<Effect[]> {
   const tokenizer = await getTokenizer();
   const effects: Effect[] = [];
 
-  // Process the entire text as one unit if it contains brackets
   const phrases: TokenizedPhrase[] = [
     {
       text: text,
@@ -87,7 +99,11 @@ export async function parseEffectText(text: string): Promise<Effect[]> {
   for (const phrase of phrases) {
     const effect = parsePhrase(phrase);
     if (effect) {
-      effects.push(effect);
+      if (Array.isArray(effect)) {
+        effects.push(...effect);
+      } else {
+        effects.push(effect);
+      }
     }
   }
 
@@ -95,6 +111,18 @@ export async function parseEffectText(text: string): Promise<Effect[]> {
 }
 
 function parsePhrase(phrase: TokenizedPhrase): Effect | null {
+  // Try status effects first
+  const status = parseStatus(phrase);
+  if (status) {
+    return status;
+  }
+
+  // Try discard-draw first
+  const discardDraw = parseDiscardDraw(phrase);
+  if (discardDraw) {
+    return discardDraw[0]; // Return first effect, others will be added in sequence
+  }
+
   // Try bench placement first
   const benchPlacement = parseBenchPlacement(phrase);
   if (benchPlacement) {

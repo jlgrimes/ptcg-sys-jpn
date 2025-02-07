@@ -14,12 +14,47 @@ export interface AbilityEffect extends Effect {
   timing: AbilityTiming;
 }
 
-export function parseAbility(phrase: TokenizedPhrase): AbilityEffect | null {
+export function parseAbility(phrase: TokenizedPhrase): Effect | null {
   const { text } = phrase;
 
   // Check if this is an ability effect
-  if (!text.includes('使える') && !text.includes('特性')) {
+  if (
+    !text.includes('使える') &&
+    !text.includes('特性') &&
+    !text.includes('効果を受けない') &&
+    !text.includes('バトルポケモンのとき')
+  ) {
     return null;
+  }
+
+  // Check for damage prevention with coin flip
+  if (text.includes('バトルポケモンのとき') && text.includes('コインを')) {
+    return {
+      type: EffectType.Ability,
+      timing: {
+        type: 'continuous',
+        condition: 'active',
+      },
+      effect: {
+        type: 'damage-prevention',
+        coinFlips: 1,
+        target: 'opponent',
+        what: 'damage',
+        onHeads: true,
+      },
+    };
+  }
+
+  // Check for ability immunity
+  if (text.includes('特性の効果を受けない')) {
+    return {
+      type: EffectType.Ability,
+      effect: {
+        type: 'immunity',
+        what: 'ability',
+        target: text.includes('相手の') ? 'opponent' : 'self',
+      },
+    };
   }
 
   // Parse timing

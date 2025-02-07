@@ -27,4 +27,47 @@ describe('Ability Effects', () => {
     const effects = await parseEffectText(text);
     expect(effects).toEqual(expectedEffects);
   });
+
+  it('should parse ability immunity effect', async () => {
+    const text = 'このポケモンは、相手のポケモンの特性の効果を受けない。';
+
+    const expectedEffects = [
+      {
+        type: EffectType.Ability,
+        effect: {
+          type: 'immunity',
+          what: 'ability',
+          target: 'opponent',
+        },
+      },
+    ];
+
+    const effects = await parseEffectText(text);
+    expect(effects).toEqual(expectedEffects);
+  });
+
+  it('should parse coin flip damage prevention ability', async () => {
+    const text =
+      'このポケモンがバトルポケモンのとき、相手のワザのダメージを受けるたびに、コインを1回投げる。「おもて」なら、このポケモンはそのダメージを受けない。';
+
+    const expectedEffects = [
+      {
+        type: EffectType.Ability,
+        timing: {
+          type: 'continuous',
+          condition: 'active',
+        },
+        effect: {
+          type: 'damage-prevention',
+          coinFlips: 1,
+          target: 'opponent',
+          what: 'damage',
+          onHeads: true,
+        },
+      },
+    ];
+
+    const effects = await parseEffectText(text);
+    expect(effects).toEqual(expectedEffects);
+  });
 });

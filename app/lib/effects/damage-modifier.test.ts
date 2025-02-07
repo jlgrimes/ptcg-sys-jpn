@@ -20,4 +20,27 @@ describe('Damage Modifier Effects', () => {
     const effects = await parseEffectText(text);
     expect(effects).toEqual(expectedEffects);
   });
+
+  it('should parse damage with effect ignore', async () => {
+    const text =
+      '120ダメージ。このワザのダメージは、相手のバトルポケモンにかかっている効果を計算しない。';
+
+    const expectedEffects = [
+      {
+        type: EffectType.Damage,
+        value: 120,
+        target: 'opponent',
+        location: 'active',
+        modifier: {
+          type: 'ignore',
+          what: 'effects',
+          target: 'opponent',
+          location: 'active',
+        },
+      },
+    ];
+
+    const effects = await parseEffectText(text);
+    expect(effects).toEqual(expectedEffects);
+  });
 });
