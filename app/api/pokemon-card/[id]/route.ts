@@ -13,7 +13,7 @@ enum EnergyType {
   Metal = 'metal',
   Fairy = 'fairy',
   Dragon = 'dragon',
-  Colorless = 'none', // matches with icon-none in the HTML
+  Colorless = 'colorless', // matches with icon-none in the HTML
 }
 
 interface Ability {
@@ -143,28 +143,40 @@ export async function GET(
       const moves = Array.from(document.querySelectorAll('h2'))
         .filter(el => el.textContent?.trim() === 'ワザ')
         .flatMap(el => {
-          const moveEl = el.nextElementSibling;
-          if (!moveEl) return [];
+          // Get all h4 and p elements that follow until the next h2
+          const moveElements: Element[] = [];
+          let currentEl = el.nextElementSibling;
 
-          const moveText = cleanText(moveEl.textContent);
-          const energyTypes = Array.from(moveEl.querySelectorAll('.icon')).map(
-            icon => {
-              const className = icon.className;
-              const typeMatch = className.match(/icon-(\w+)/);
-              return (typeMatch?.[1] as EnergyType) || EnergyType.Colorless;
+          while (currentEl && currentEl.tagName !== 'H2') {
+            moveElements.push(currentEl);
+            currentEl = currentEl.nextElementSibling;
+          }
+
+          // Process moves in pairs of h4 (move) and p (description)
+          return moveElements.reduce<Move[]>((moves, el, index) => {
+            if (el.tagName === 'H4') {
+              const moveText = cleanText(el.textContent);
+              const energyTypes = Array.from(el.querySelectorAll('.icon')).map(
+                icon => {
+                  const className = icon.className;
+                  const typeMatch = className.match(/icon-(\w+)/);
+                  return typeMatch?.[1] === 'none'
+                    ? EnergyType.Colorless
+                    : (typeMatch?.[1] as EnergyType) || EnergyType.Colorless;
+                }
+              );
+
+              moves.push({
+                name: cleanText(moveText.replace(/[×\d]/g, '')),
+                damage: moveText.match(/(\d+)(?:×)?$/)?.[1] || '',
+                description:
+                  cleanText(moveElements[index + 1]?.textContent) || '',
+                energyCount: energyTypes.length,
+                energyTypes,
+              });
             }
-          );
-
-          return [
-            {
-              name: cleanText(moveText.replace(/[×\d]/g, '')),
-              damage: moveText.match(/(\d+)(?:×)?$/)?.[1] || '',
-              description:
-                cleanText(moveEl.nextElementSibling?.textContent) || '',
-              energyCount: energyTypes.length,
-              energyTypes,
-            },
-          ];
+            return moves;
+          }, []);
         });
 
       // Stats from table
