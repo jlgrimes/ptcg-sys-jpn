@@ -13,9 +13,7 @@ export interface DamageModifierEffect extends Effect {
   modifier: DamageModifier;
 }
 
-export function parseDamageModifier(
-  phrase: TokenizedPhrase
-): DamageModifierEffect | null {
+export function parseDamageModifier(phrase: TokenizedPhrase): Effect | null {
   const { text } = phrase;
 
   // Check if this is a damage modifier effect
@@ -23,15 +21,24 @@ export function parseDamageModifier(
     return null;
   }
 
-  const effect: DamageModifierEffect = {
+  // Extract damage value if present
+  const damageMatch = text.match(/(\d+)ダメージ/);
+
+  const effect: Effect = {
     type: EffectType.Damage,
+    target: 'opponent',
+    location: 'active',
     modifier: {
       type: 'ignore',
       what: 'effects',
       target: text.includes('自分') ? 'self' : 'opponent',
-      location: text.includes('バトルポケモン') ? 'active' : 'bench',
+      location: 'active',
     },
   };
+
+  if (damageMatch) {
+    effect.value = parseInt(damageMatch[1]);
+  }
 
   return effect;
 }

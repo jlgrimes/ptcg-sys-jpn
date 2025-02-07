@@ -57,7 +57,24 @@ export function parseAbility(phrase: TokenizedPhrase): Effect | null {
     };
   }
 
-  // Parse timing
+  // Check for ability nullification
+  if (text.includes('特性は無効')) {
+    return {
+      type: EffectType.Ability,
+      timing: {
+        type: 'continuous',
+        condition: 'active',
+      },
+      effect: {
+        type: 'nullify',
+        what: 'ability',
+        target: 'opponent',
+        location: 'active',
+      },
+    };
+  }
+
+  // Parse timing for search abilities
   const timing: AbilityTiming = {
     type: text.includes('1回使える') ? 'once-per-turn' : 'continuous',
   };
@@ -71,17 +88,19 @@ export function parseAbility(phrase: TokenizedPhrase): Effect | null {
     };
   }
 
-  // Parse the actual effect
-  const effect: AbilityEffect = {
-    type: EffectType.Search,
-    target: 'self',
-    source: 'deck',
-    destination: 'hand',
-    count: 1,
-    selection: 'choose',
-    timing,
-    shuffle: text.includes('山札を切る'),
-  };
+  // Return search effect for search abilities
+  if (text.includes('山札から') && text.includes('手札に加える')) {
+    return {
+      type: EffectType.Search,
+      target: 'self',
+      source: 'deck',
+      destination: 'hand',
+      count: 1,
+      selection: 'choose',
+      timing,
+      shuffle: text.includes('山札を切る'),
+    };
+  }
 
-  return effect;
+  return null;
 }

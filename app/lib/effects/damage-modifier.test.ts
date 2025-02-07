@@ -8,6 +8,8 @@ describe('Damage Modifier Effects', () => {
     const expectedEffects = [
       {
         type: EffectType.Damage,
+        target: 'opponent',
+        location: 'active',
         modifier: {
           type: 'ignore',
           what: 'effects',

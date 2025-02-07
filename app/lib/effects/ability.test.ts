@@ -70,4 +70,28 @@ describe('Ability Effects', () => {
     const effects = await parseEffectText(text);
     expect(effects).toEqual(expectedEffects);
   });
+
+  it('should parse ability nullification effect', async () => {
+    const text =
+      'このポケモンがバトルポケモンのとき、相手のバトルポケモンの特性は無効になる。';
+
+    const expectedEffects = [
+      {
+        type: EffectType.Ability,
+        timing: {
+          type: 'continuous',
+          condition: 'active',
+        },
+        effect: {
+          type: 'nullify',
+          what: 'ability',
+          target: 'opponent',
+          location: 'active',
+        },
+      },
+    ];
+
+    const effects = await parseEffectText(text);
+    expect(effects).toEqual(expectedEffects);
+  });
 });

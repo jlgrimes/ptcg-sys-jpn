@@ -24,6 +24,7 @@ export enum EffectType {
   Heal = 'heal',
   Restriction = 'restriction',
   Place = 'place',
+  Ability = 'ability',
 }
 
 export interface Effect {
@@ -38,7 +39,7 @@ export interface Effect {
     type: 'count';
     target: 'self' | 'opponent';
     condition: string;
-    location: 'field' | 'bench' | 'discard';
+    location: 'field' | 'bench' | 'discard' | 'hand';
   };
   modifier?: {
     type: 'ignore' | 'double' | 'half';
@@ -60,6 +61,7 @@ export interface Effect {
       abilityName?: string;
       condition?: string;
     };
+    condition?: 'active';
   };
   shuffle?: boolean;
   source?: 'deck' | 'hand' | 'discard' | 'bench' | 'active';
@@ -67,9 +69,12 @@ export interface Effect {
   selection?: 'choose' | 'random' | 'all';
   cardType?: 'basic' | 'stage1' | 'stage2' | 'ex' | 'vmax';
   effect?: {
-    type: 'immunity' | 'ignore';
-    what: 'ability' | 'effects';
+    type: 'immunity' | 'ignore' | 'nullify' | 'damage-prevention';
+    what: 'ability' | 'effects' | 'damage';
     target: 'self' | 'opponent';
+    location?: 'active' | 'bench';
+    coinFlips?: number;
+    onHeads?: boolean;
   };
   coinFlip?: {
     count: number;
@@ -77,6 +82,7 @@ export interface Effect {
     onTails?: Effect;
   };
   status?: 'paralyzed' | 'asleep' | 'confused' | 'burned' | 'poisoned';
+  revealLocation?: 'hand' | 'deck' | 'discard';
 }
 
 interface TokenizedPhrase {
@@ -110,7 +116,7 @@ export async function parseEffectText(text: string): Promise<Effect[]> {
   return effects;
 }
 
-function parsePhrase(phrase: TokenizedPhrase): Effect | null {
+function parsePhrase(phrase: TokenizedPhrase): Effect | Effect[] | null {
   // Try status effects first
   const status = parseStatus(phrase);
   if (status) {
@@ -120,7 +126,7 @@ function parsePhrase(phrase: TokenizedPhrase): Effect | null {
   // Try discard-draw first
   const discardDraw = parseDiscardDraw(phrase);
   if (discardDraw) {
-    return discardDraw[0]; // Return first effect, others will be added in sequence
+    return discardDraw; // Return the full array of effects
   }
 
   // Try bench placement first

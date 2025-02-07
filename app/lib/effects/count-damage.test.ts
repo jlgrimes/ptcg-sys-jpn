@@ -22,4 +22,27 @@ describe('Count-based Damage Effects', () => {
     const effects = await parseEffectText(text);
     expect(effects).toEqual(expectedEffects);
   });
+
+  it('should parse damage based on trainer card count', async () => {
+    const text = '相手の手札を見る。その中のトレーナーズの数×30ダメージ。';
+
+    const expectedEffects = [
+      {
+        type: EffectType.Damage,
+        value: 30,
+        target: 'opponent',
+        location: 'active',
+        multiplier: {
+          type: 'count',
+          target: 'opponent',
+          condition: 'トレーナーズ',
+          location: 'hand',
+        },
+        revealLocation: 'hand',
+      },
+    ];
+
+    const effects = await parseEffectText(text);
+    expect(effects).toEqual(expectedEffects);
+  });
 });
