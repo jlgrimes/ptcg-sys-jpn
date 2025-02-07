@@ -5,8 +5,12 @@ export interface EnergyEffect extends Effect {
   type: EffectType.Energy;
   action: 'attach' | 'discard' | 'move';
   source: 'active' | 'bench' | 'hand' | 'discard';
+  destination?: 'active' | 'bench' | 'hand' | 'discard';
   count: number;
   selection: 'choose' | 'random' | 'all';
+  energyType?: 'basic' | 'special';
+  maxCount?: boolean;
+  targetCount?: number;
 }
 
 export function parseEnergyManipulation(
@@ -20,7 +24,7 @@ export function parseEnergyManipulation(
   }
 
   // Extract count
-  const countMatch = text.match(/(\d+)個/);
+  const countMatch = text.match(/(\d+)(枚|個)/);
   if (!countMatch) {
     return null;
   }
@@ -30,26 +34,45 @@ export function parseEnergyManipulation(
     target: text.includes('相手') ? 'opponent' : 'self',
     count: parseInt(countMatch[1]),
     selection: text.includes('選び') ? 'choose' : 'random',
-    action: 'discard', // default
-    source: 'active', // default
+    action: 'attach', // default
+    source: 'discard', // default
   };
 
   // Determine action
-  if (text.includes('トラッシュ')) {
+  if (text.includes('トラッシュする')) {
     effect.action = 'discard';
-  } else if (text.includes('つけ')) {
+  } else if (text.includes('つける')) {
     effect.action = 'attach';
+    effect.destination = text.includes('ベンチ') ? 'bench' : 'active';
   } else if (text.includes('移動')) {
     effect.action = 'move';
   }
 
   // Determine source
-  if (text.includes('このポケモンについている')) {
-    effect.source = 'active';
+  if (text.includes('トラッシュから')) {
+    effect.source = 'discard';
   } else if (text.includes('手札')) {
     effect.source = 'hand';
-  } else if (text.includes('トラッシュ')) {
-    effect.source = 'discard';
+  } else if (text.includes('このポケモンについている')) {
+    effect.source = 'active';
+  }
+
+  // Check for energy type
+  if (text.includes('基本エネルギー')) {
+    effect.energyType = 'basic';
+  } else if (text.includes('特殊エネルギー')) {
+    effect.energyType = 'special';
+  }
+
+  // Check for "up to X" pattern
+  if (text.includes('まで')) {
+    effect.maxCount = true;
+  }
+
+  // Check for target count
+  const targetMatch = text.match(/(\d+)匹/);
+  if (targetMatch) {
+    effect.targetCount = parseInt(targetMatch[1]);
   }
 
   return effect;

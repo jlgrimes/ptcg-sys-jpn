@@ -4,6 +4,7 @@ import { parseBenchDamage } from './effects/bench-damage';
 import { parseEnergyManipulation } from './effects/energy-manipulation';
 import { parseCountDamage } from './effects/count-damage';
 import { parseDamageModifier } from './effects/damage-modifier';
+import { parseConditionCheck } from './effects/condition-check';
 
 // Types for different effect components
 export enum EffectType {
@@ -40,6 +41,13 @@ export interface Effect {
     target: 'self' | 'opponent';
     location: 'active' | 'bench';
   };
+  check?: {
+    type: 'prize-count';
+    target: 'self' | 'opponent';
+    values: number[];
+    comparison: 'equal' | 'not-equal' | 'greater' | 'less';
+  };
+  result?: 'fail' | 'success';
 }
 
 interface TokenizedPhrase {
@@ -71,6 +79,12 @@ export async function parseEffectText(text: string): Promise<Effect[]> {
 }
 
 function parsePhrase(phrase: TokenizedPhrase): Effect | null {
+  // Try condition check first
+  const conditionCheck = parseConditionCheck(phrase);
+  if (conditionCheck) {
+    return conditionCheck;
+  }
+
   // Try damage modifier first
   const damageModifier = parseDamageModifier(phrase);
   if (damageModifier) {
