@@ -16,6 +16,11 @@ enum EnergyType {
   Colorless = 'none', // matches with icon-none in the HTML
 }
 
+interface Ability {
+  name: string;
+  description: string;
+}
+
 interface CardDetails {
   name: string; // バケッチャ
   cardId: string; // XY4 043 / 088
@@ -29,11 +34,8 @@ interface CardDetails {
   illustrator: string; // HiRON
   pokemonType: string; // たね
   hp: string; // HP 60
-  moves: {
-    name: string;
-    damage?: string;
-    description?: string;
-  }[];
+  abilities: Ability[];
+  moves: Move[];
   weakness: string; // ×2
   resistance: string; // －20
   retreatCost: string; // empty in this case
@@ -119,50 +121,51 @@ export async function GET(
       );
       const hp = cleanText(document.querySelector('.hp-num')?.textContent);
 
+      // Abilities
+      const abilities: Ability[] = Array.from(document.querySelectorAll('h2'))
+        .filter(el => el.textContent?.trim() === '特性')
+        .flatMap(el => {
+          const abilityName = cleanText(el.nextElementSibling?.textContent);
+          const abilityDescription = cleanText(
+            el.nextElementSibling?.nextElementSibling?.textContent
+          );
+          return abilityName
+            ? [
+                {
+                  name: abilityName,
+                  description: abilityDescription || '',
+                },
+              ]
+            : [];
+        });
+
       // Moves
-      const moveSection = Array.from(document.querySelectorAll('h2')).find(
-        el => el.textContent?.trim() === 'ワザ'
-      )?.parentElement;
+      const moves = Array.from(document.querySelectorAll('h2'))
+        .filter(el => el.textContent?.trim() === 'ワザ')
+        .flatMap(el => {
+          const moveEl = el.nextElementSibling;
+          if (!moveEl) return [];
 
-      const moves = moveSection
-        ? Array.from(moveSection.children).reduce<Move[]>((acc, el) => {
-            if (el.tagName === 'H4') {
-              const moveText = cleanText(el.textContent);
-              const damageEl = el.querySelector('.Text-fjalla');
-              const damage =
-                cleanText(damageEl?.textContent)?.replace('×', '') || '';
-
-              // Get energy icons count
-              const energyCount = el.querySelectorAll('.icon').length;
-
-              // Get energy types from icons
-              const energyTypes = Array.from(el.querySelectorAll('.icon')).map(
-                icon => {
-                  const className = icon.className;
-                  const typeMatch = className.match(/icon-(\w+)/);
-                  return (typeMatch?.[1] as EnergyType) || EnergyType.Colorless;
-                }
-              );
-
-              // Get name by removing the damage part
-              const name = cleanText(
-                moveText.replace(damageEl?.textContent || '', '')
-              );
-
-              acc.push({
-                name,
-                damage,
-                description: '',
-                energyCount,
-                energyTypes,
-              });
-            } else if (el.tagName === 'P' && acc.length > 0) {
-              // Add description to the last move
-              acc[acc.length - 1].description = cleanText(el.textContent);
+          const moveText = cleanText(moveEl.textContent);
+          const energyTypes = Array.from(moveEl.querySelectorAll('.icon')).map(
+            icon => {
+              const className = icon.className;
+              const typeMatch = className.match(/icon-(\w+)/);
+              return (typeMatch?.[1] as EnergyType) || EnergyType.Colorless;
             }
-            return acc;
-          }, [])
-        : [];
+          );
+
+          return [
+            {
+              name: cleanText(moveText.replace(/[×\d]/g, '')),
+              damage: moveText.match(/(\d+)(?:×)?$/)?.[1] || '',
+              description:
+                cleanText(moveEl.nextElementSibling?.textContent) || '',
+              energyCount: energyTypes.length,
+              energyTypes,
+            },
+          ];
+        });
 
       // Stats from table
       const [weakness, resistance, retreatCost] = Array.from(
@@ -193,6 +196,7 @@ export async function GET(
         illustrator,
         pokemonType,
         hp,
+        abilities,
         moves,
         weakness,
         resistance,
