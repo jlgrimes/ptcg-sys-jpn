@@ -6,6 +6,7 @@ import { parseCountDamage } from './effects/count-damage';
 import { parseDamageModifier } from './effects/damage-modifier';
 import { parseConditionCheck } from './effects/condition-check';
 import { parseAbility } from './effects/ability';
+import { parseBenchPlacement } from './effects/bench-placement';
 
 // Types for different effect components
 export enum EffectType {
@@ -20,6 +21,7 @@ export enum EffectType {
   Energy = 'energy',
   Heal = 'heal',
   Restriction = 'restriction',
+  Place = 'place',
 }
 
 export interface Effect {
@@ -61,6 +63,7 @@ export interface Effect {
   source?: 'deck' | 'hand' | 'discard' | 'bench' | 'active';
   destination?: 'deck' | 'hand' | 'discard' | 'bench' | 'active';
   selection?: 'choose' | 'random' | 'all';
+  cardType?: 'basic' | 'stage1' | 'stage2' | 'ex' | 'vmax';
 }
 
 interface TokenizedPhrase {
@@ -92,6 +95,12 @@ export async function parseEffectText(text: string): Promise<Effect[]> {
 }
 
 function parsePhrase(phrase: TokenizedPhrase): Effect | null {
+  // Try bench placement first
+  const benchPlacement = parseBenchPlacement(phrase);
+  if (benchPlacement) {
+    return benchPlacement;
+  }
+
   // Try ability first
   const ability = parseAbility(phrase);
   if (ability) {
