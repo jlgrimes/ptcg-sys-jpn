@@ -34,6 +34,7 @@ interface CardDetails {
   illustrator: string; // HiRON
   pokemonType: string; // たね
   hp: string; // HP 60
+  cardEffect?: string; // Effect text for trainer/energy cards
   abilities: Ability[];
   moves: Move[];
   weakness: string; // ×2
@@ -120,6 +121,15 @@ export async function GET(
         statsDiv?.querySelector('div:first-child')?.textContent
       );
       const hp = cleanText(document.querySelector('.hp-num')?.textContent);
+
+      // Check for card effect (グッズ, etc.)
+      let cardEffect = '';
+      const effectHeader = Array.from(document.querySelectorAll('h2')).find(
+        el => el.textContent?.trim() === 'グッズ'
+      );
+      if (effectHeader) {
+        cardEffect = cleanText(effectHeader.nextElementSibling?.textContent);
+      }
 
       // Abilities
       const abilities: Ability[] = Array.from(document.querySelectorAll('h2'))
@@ -208,8 +218,9 @@ export async function GET(
         illustrator,
         pokemonType,
         hp,
-        abilities,
-        moves,
+        cardEffect,
+        abilities: effectHeader ? [] : abilities,
+        moves: effectHeader ? [] : moves,
         weakness,
         resistance,
         retreatCost,
