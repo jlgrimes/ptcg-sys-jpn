@@ -26,6 +26,13 @@ interface CardDetails {
   set: string; // ポケモンカードゲームXY 拡張パック「ファントムゲート」
 }
 
+interface Move {
+  name: string;
+  damage: string;
+  description: string;
+  energyCount: number;
+}
+
 export async function GET(
   request: Request,
   { params }: { params: { id: string } }
@@ -35,7 +42,7 @@ export async function GET(
     const url = `https://www.pokemon-card.com/card-search/details.php/card/${cardId}`;
 
     const browser = await puppeteer.launch({
-      headless: 'new',
+      headless: true,
     });
 
     const page = await browser.newPage();
@@ -44,6 +51,23 @@ export async function GET(
     const cardDetails: CardDetails = await page.evaluate(() => {
       const cleanText = (text: string | null | undefined) =>
         text?.replace(/\s+/g, ' ').trim() || '';
+
+      // Debug: Log all h4 elements to see what we're working with
+      console.log(
+        'All H4 elements:',
+        Array.from(document.querySelectorAll('h4')).map(el => el.textContent)
+      );
+
+      // Debug: Log potential move containers
+      console.log(
+        'Potential move elements:',
+        Array.from(
+          document.querySelectorAll('.mt-3, .waza, [class*="waza"]')
+        ).map(el => ({
+          text: el.textContent,
+          html: el.innerHTML,
+        }))
+      );
 
       // Basic card info
       const name = cleanText(document.querySelector('h1')?.textContent);
@@ -77,23 +101,42 @@ export async function GET(
       const pokemonType = cleanText(
         statsDiv?.querySelector('div:first-child')?.textContent
       );
-      const hp = cleanText(
-        statsDiv?.querySelector('div:nth-child(2)')?.textContent
-      );
+      const hp = cleanText(document.querySelector('.hp-num')?.textContent);
 
       // Moves
-      const moves = Array.from(document.querySelectorAll('.mt-3 h4'))
-        .filter(el => el.textContent?.includes('ワザ'))
-        .map(moveEl => {
-          const container = moveEl.closest('div');
-          const moveText = cleanText(moveEl.textContent);
-          const [name, damage] = moveText.split(/(\d+)$/).map(cleanText);
-          const description = cleanText(
-            container?.querySelector('p')?.textContent
-          );
+      const moveSection = Array.from(document.querySelectorAll('h2')).find(
+        el => el.textContent?.trim() === 'ワザ'
+      )?.parentElement;
 
-          return { name, damage, description };
-        });
+      const moves = moveSection
+        ? Array.from(moveSection.children).reduce<Move[]>((acc, el) => {
+            if (el.tagName === 'H4') {
+              const moveText = cleanText(el.textContent);
+              const damageEl = el.querySelector('.Text-fjalla');
+              const damage =
+                cleanText(damageEl?.textContent)?.replace('×', '') || '';
+
+              // Get energy icons count
+              const energyCount = el.querySelectorAll('.icon').length;
+
+              // Get name by removing the damage part
+              const name = cleanText(
+                moveText.replace(damageEl?.textContent || '', '')
+              );
+
+              acc.push({
+                name,
+                damage,
+                description: '',
+                energyCount,
+              });
+            } else if (el.tagName === 'P' && acc.length > 0) {
+              // Add description to the last move
+              acc[acc.length - 1].description = cleanText(el.textContent);
+            }
+            return acc;
+          }, [])
+        : [];
 
       // Stats from table
       const [weakness, resistance, retreatCost] = Array.from(
