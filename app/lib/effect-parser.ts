@@ -1,4 +1,5 @@
 import * as kuromoji from 'kuromoji';
+import { parseMoveRestriction } from './effects/move-restriction';
 
 // Types for different effect components
 export enum EffectType {
@@ -12,6 +13,7 @@ export enum EffectType {
   Switch = 'switch',
   Energy = 'energy',
   Heal = 'heal',
+  Restriction = 'restriction',
 }
 
 export interface Effect {
@@ -54,6 +56,12 @@ export async function parseEffectText(text: string): Promise<Effect[]> {
 
 function parsePhrase(phrase: TokenizedPhrase): Effect | null {
   const { text, tokens } = phrase;
+
+  // Try move restriction first
+  const moveRestriction = parseMoveRestriction(phrase);
+  if (moveRestriction) {
+    return moveRestriction;
+  }
 
   // Find action indicators in the tokens
   const hasDrawAction = tokens.some(t => t.basic_form === '引く');
@@ -165,3 +173,6 @@ async function getTokenizer(): Promise<
 //     location: 'hand'
 //   }
 // ]
+
+// Also export the TokenizedPhrase type for use in effect handlers
+export type { TokenizedPhrase };
