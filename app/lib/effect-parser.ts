@@ -1,5 +1,7 @@
 import * as kuromoji from 'kuromoji';
 import { parseMoveRestriction } from './effects/move-restriction';
+import { parseBenchDamage } from './effects/bench-damage';
+import { parseEnergyManipulation } from './effects/energy-manipulation';
 
 // Types for different effect components
 export enum EffectType {
@@ -22,7 +24,7 @@ export interface Effect {
   target?: 'self' | 'opponent' | 'both';
   condition?: string;
   location?: 'deck' | 'hand' | 'discard' | 'bench' | 'active';
-  count?: number; // For effects that target a specific number of Pokémon
+  count?: number | 'all';
   ignoreWeaknessResistance?: boolean; // For bench damage effects
 }
 
@@ -55,13 +57,25 @@ export async function parseEffectText(text: string): Promise<Effect[]> {
 }
 
 function parsePhrase(phrase: TokenizedPhrase): Effect | null {
-  const { text, tokens } = phrase;
+  // Try energy manipulation first
+  const energyEffect = parseEnergyManipulation(phrase);
+  if (energyEffect) {
+    return energyEffect;
+  }
 
-  // Try move restriction first
+  // Try bench damage
+  const benchDamage = parseBenchDamage(phrase);
+  if (benchDamage) {
+    return benchDamage;
+  }
+
+  // Try move restriction
   const moveRestriction = parseMoveRestriction(phrase);
   if (moveRestriction) {
     return moveRestriction;
   }
+
+  const { text, tokens } = phrase;
 
   // Find action indicators in the tokens
   const hasDrawAction = tokens.some(t => t.basic_form === '引く');
