@@ -2,6 +2,8 @@ import * as kuromoji from 'kuromoji';
 import { parseMoveRestriction } from './effects/move-restriction';
 import { parseBenchDamage } from './effects/bench-damage';
 import { parseEnergyManipulation } from './effects/energy-manipulation';
+import { parseCountDamage } from './effects/count-damage';
+import { parseDamageModifier } from './effects/damage-modifier';
 
 // Types for different effect components
 export enum EffectType {
@@ -26,6 +28,18 @@ export interface Effect {
   location?: 'deck' | 'hand' | 'discard' | 'bench' | 'active';
   count?: number | 'all';
   ignoreWeaknessResistance?: boolean; // For bench damage effects
+  multiplier?: {
+    type: 'count';
+    target: 'self' | 'opponent';
+    condition: string;
+    location: 'field' | 'bench' | 'discard';
+  };
+  modifier?: {
+    type: 'ignore' | 'double' | 'half';
+    what: 'effects' | 'weakness' | 'resistance';
+    target: 'self' | 'opponent';
+    location: 'active' | 'bench';
+  };
 }
 
 interface TokenizedPhrase {
@@ -57,6 +71,18 @@ export async function parseEffectText(text: string): Promise<Effect[]> {
 }
 
 function parsePhrase(phrase: TokenizedPhrase): Effect | null {
+  // Try damage modifier first
+  const damageModifier = parseDamageModifier(phrase);
+  if (damageModifier) {
+    return damageModifier;
+  }
+
+  // Try count damage first
+  const countDamage = parseCountDamage(phrase);
+  if (countDamage) {
+    return countDamage;
+  }
+
   // Try energy manipulation first
   const energyEffect = parseEnergyManipulation(phrase);
   if (energyEffect) {
