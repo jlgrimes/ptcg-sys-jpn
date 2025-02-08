@@ -29,7 +29,6 @@ export async function parseEffectText(text: string): Promise<Effect[]> {
     }
   }
 
-  console.log('Parsed effects:', effects);
   return effects;
 }
 

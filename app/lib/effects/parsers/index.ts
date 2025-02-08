@@ -25,13 +25,10 @@ const parsers = [
 ];
 
 export function parseEffect(phrase: TokenizedPhrase): Effect | Effect[] | null {
-  console.log('Parsing phrase:', phrase);
   for (const Parser of parsers) {
     const parser = new Parser(phrase);
     if (parser.canParse()) {
-      const result = parser.parse();
-      console.log('Parser result:', result);
-      return result;
+      return parser.parse();
     }
   }
   return null;
