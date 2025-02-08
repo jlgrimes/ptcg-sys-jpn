@@ -91,7 +91,6 @@ class ParserRegistry {
 const registry = new ParserRegistry();
 
 // Register parsers in priority order (most specific first)
-registry.register(MoveRestrictionParser, 900);
 registry.register(CountDamageParser, 800);
 registry.register(BenchDamageParser, 700);
 registry.register(DamageModifierParser, 600);
@@ -104,6 +103,7 @@ registry.register(DiscardParser, 50);
 registry.register(DrawParser, 40);
 registry.register(ConditionParser, 30);
 registry.register(DamageParser, 10); // Most generic damage parser last
+registry.register(MoveRestrictionParser, 5); // Move restriction should be last
 
 export function parseEffect(phrase: TokenizedPhrase): Effect[] {
   return registry.parseEffect(phrase);

@@ -6,12 +6,49 @@ export class StatusParser extends BaseParser<Effect> {
     return (
       this.text.includes('状態') ||
       this.text.includes('効果を受けない') ||
-      this.text.includes('特性は無効')
+      this.text.includes('特性は無効') ||
+      (this.text.includes('コインを') &&
+        this.text.includes('ダメージを受けない'))
     );
   }
 
   parse(): Effect | null {
     if (!this.canParse()) return null;
+
+    // Handle damage prevention with coin flip
+    if (
+      this.text.includes('コインを') &&
+      this.text.includes('ダメージを受けない')
+    ) {
+      return this.createEffect(EffectType.Status, {
+        targets: [
+          {
+            type: 'pokemon',
+            player: 'self',
+            location: {
+              type: 'active',
+            },
+          },
+        ],
+        conditions: [
+          {
+            type: 'coin-flip',
+            value: 1,
+            onSuccess: [
+              {
+                type: EffectType.Status,
+                modifiers: [
+                  {
+                    type: 'prevent',
+                    what: 'damage',
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      });
+    }
 
     // Handle ability immunity
     if (this.text.includes('効果を受けない')) {
