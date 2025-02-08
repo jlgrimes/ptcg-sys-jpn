@@ -39,8 +39,9 @@ export interface Location {
 }
 
 export interface Filter {
-  type: 'card-type' | 'energy-type' | 'status' | 'evolution-stage';
-  value: string;
+  type: 'card-type' | 'energy-type' | 'status' | 'evolution-stage' | 'hp';
+  value: string | number;
+  comparison?: 'less-than-or-equal' | 'equal' | 'not-equal';
 }
 
 export interface Condition {

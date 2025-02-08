@@ -16,7 +16,7 @@ export class BenchPlacementParser extends BaseParser<Effect> {
 
     const effects: Effect[] = [];
     const player = this.text.includes('相手') ? 'opponent' : 'self';
-    const count = this.parseCount('pokemon');
+    const count = this.parseCountWithMax();
     const filters = this.parseFilters();
 
     // Add place effect first
@@ -49,6 +49,7 @@ export class BenchPlacementParser extends BaseParser<Effect> {
             location: {
               type: 'deck',
             },
+            ...(filters && { filters }),
           },
         ],
       });
@@ -94,6 +95,24 @@ export class BenchPlacementParser extends BaseParser<Effect> {
       });
     }
 
+    // Parse HP condition
+    const hpMatch = this.text.match(/HPが「(\d+)」以下/);
+    if (hpMatch) {
+      filters.push({
+        type: 'hp',
+        value: parseInt(hpMatch[1]),
+        comparison: 'less-than-or-equal',
+      });
+    }
+
     return filters.length > 0 ? filters : undefined;
+  }
+
+  protected parseCountWithMax(): number {
+    const match = this.text.match(/(\d+)枚まで/);
+    if (match) {
+      return parseInt(match[1]);
+    }
+    return this.parseCount('pokemon');
   }
 }

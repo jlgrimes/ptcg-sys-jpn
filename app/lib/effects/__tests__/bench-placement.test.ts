@@ -35,6 +35,12 @@ describe('Bench Placement Effects', () => {
               type: 'deck',
             },
             count: 1,
+            filters: [
+              {
+                type: 'card-type',
+                value: 'basic',
+              },
+            ],
           },
         ],
       },
@@ -69,7 +75,7 @@ describe('Bench Placement Effects', () => {
             location: {
               type: 'bench',
             },
-            count: 1,
+            count: 2,
             filters: [
               {
                 type: 'card-type',
@@ -118,6 +124,12 @@ describe('Bench Placement Effects', () => {
               type: 'deck',
             },
             count: 1,
+            filters: [
+              {
+                type: 'card-type',
+                value: 'stage2',
+              },
+            ],
           },
         ],
       },
@@ -173,6 +185,12 @@ describe('Bench Placement Effects', () => {
               type: 'deck',
             },
             count: 1,
+            filters: [
+              {
+                type: 'card-type',
+                value: 'basic',
+              },
+            ],
           },
         ],
       },
@@ -182,6 +200,77 @@ describe('Bench Placement Effects', () => {
           {
             type: 'pokemon',
             player: 'opponent',
+            location: {
+              type: 'deck',
+            },
+          },
+        ],
+      },
+    ];
+
+    const effects = await parseEffectText(text);
+    expect(effects).toEqual(expectedEffects);
+  });
+
+  it('should parse placing basic pokemon with HP condition from deck', async () => {
+    const text =
+      '自分の山札から、HPが「70」以下のたねポケモンを2枚まで選び、ベンチに出す。そして山札を切る。';
+
+    const expectedEffects = [
+      {
+        type: EffectType.Place,
+        targets: [
+          {
+            type: 'pokemon',
+            player: 'self',
+            location: {
+              type: 'bench',
+            },
+            count: 2,
+            filters: [
+              {
+                type: 'card-type',
+                value: 'basic',
+              },
+              {
+                type: 'hp',
+                value: 70,
+                comparison: 'less-than-or-equal',
+              },
+            ],
+          },
+        ],
+      },
+      {
+        type: EffectType.Search,
+        targets: [
+          {
+            type: 'pokemon',
+            player: 'self',
+            location: {
+              type: 'deck',
+            },
+            count: 2,
+            filters: [
+              {
+                type: 'card-type',
+                value: 'basic',
+              },
+              {
+                type: 'hp',
+                value: 70,
+                comparison: 'less-than-or-equal',
+              },
+            ],
+          },
+        ],
+      },
+      {
+        type: EffectType.Shuffle,
+        targets: [
+          {
+            type: 'pokemon',
+            player: 'self',
             location: {
               type: 'deck',
             },
