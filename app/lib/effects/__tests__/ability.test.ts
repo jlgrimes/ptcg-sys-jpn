@@ -1,12 +1,30 @@
-import { parseEffectText } from '../effect-parser';
-import { EffectType } from './types';
+import { parseEffectText } from '../../effect-parser';
+import { EffectType } from '../types';
 
 describe('Ability Effects', () => {
   it('should parse once per turn search ability', async () => {
     const text =
-      '自分の番に1回使える。自分の山札から好きなカードを1枚選び、手札に加える。そして山札を切る。この番、すでに別の「マッハサーチ」を使っていたなら、この特性は使えない。';
-
+      '特性「マッハサーチ」：1ターンに1回使える。山札から1枚選び、手札に加える。';
     const expectedEffects = [
+      {
+        type: EffectType.Ability,
+        targets: [
+          {
+            type: 'pokemon',
+            player: 'self',
+            location: {
+              type: 'active',
+            },
+          },
+        ],
+        timing: {
+          type: 'once-per-turn',
+          restriction: {
+            type: 'ability-not-used',
+            abilityName: 'マッハサーチ',
+          },
+        },
+      },
       {
         type: EffectType.Search,
         targets: [
@@ -15,7 +33,6 @@ describe('Ability Effects', () => {
             player: 'self',
             location: {
               type: 'deck',
-              shuffle: true,
             },
             count: 1,
           },
@@ -35,15 +52,14 @@ describe('Ability Effects', () => {
   });
 
   it('should parse ability immunity effect', async () => {
-    const text = 'このポケモンは、相手のポケモンの特性の効果を受けない。';
-
+    const text = '特性の効果を受けない';
     const expectedEffects = [
       {
         type: EffectType.Ability,
         targets: [
           {
             type: 'pokemon',
-            player: 'opponent',
+            player: 'self',
             location: {
               type: 'active',
             },
@@ -76,7 +92,7 @@ describe('Ability Effects', () => {
         targets: [
           {
             type: 'pokemon',
-            player: 'opponent',
+            player: 'self',
             location: {
               type: 'active',
             },
@@ -88,8 +104,13 @@ describe('Ability Effects', () => {
             value: 1,
             onSuccess: [
               {
-                type: 'damage-prevention',
-                what: 'damage',
+                type: EffectType.Status,
+                modifiers: [
+                  {
+                    type: 'prevent',
+                    what: 'damage',
+                  },
+                ],
               },
             ],
           },

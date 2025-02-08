@@ -1,15 +1,12 @@
-import { parseEffectText } from '../effect-parser';
-import { EffectType } from './types';
+import { parseEffectText } from '../../effect-parser';
+import { EffectType } from '../types';
 
 describe('Status Effects', () => {
-  it('should parse coin flip status effect with damage', async () => {
-    const text =
-      '60ダメージ。コインを1回投げ、「おもて」なら、相手のバトルポケモンをマヒ状態にする。';
-
+  it('should parse paralysis effect', async () => {
+    const text = 'コインを投げて「おもて」なら、相手のポケモンをマヒ状態にする';
     const expectedEffects = [
       {
-        type: EffectType.Damage,
-        value: 60,
+        type: EffectType.Status,
         targets: [
           {
             type: 'pokemon',

@@ -1,5 +1,5 @@
-import { parseEffectText } from '../effect-parser';
-import { EffectType } from './types';
+import { parseEffectText } from '../../effect-parser';
+import { EffectType } from '../types';
 
 describe('Condition Check Effects', () => {
   it('should parse prize card count condition', async () => {

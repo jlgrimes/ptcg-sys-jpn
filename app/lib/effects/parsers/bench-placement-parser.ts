@@ -1,30 +1,41 @@
 import { BaseParser } from './base-parser';
 import { Effect, EffectType, Filter } from '../types';
 
-export class PlaceParser extends BaseParser<Effect> {
+export class BenchPlacementParser extends BaseParser<Effect> {
   canParse(): boolean {
-    return this.text.includes('出す');
+    return (
+      this.text.includes('ベンチ') &&
+      (this.text.includes('出す') || this.text.includes('のせる'))
+    );
   }
 
   parse(): Effect | null {
     if (!this.canParse()) return null;
 
-    const effect: Partial<Effect> = {
+    const player = this.text.includes('相手の') ? 'opponent' : 'self';
+    const fromDeck = this.text.includes('山札から');
+    const shuffle = this.text.includes('切る');
+    const filters = this.parseFilters();
+    const count = this.parseCount('pokemon');
+
+    // Create the place effect
+    const placeEffect: Effect = {
       type: EffectType.Place,
       targets: [
         {
           type: 'pokemon',
-          player: this.text.includes('相手の') ? 'opponent' : 'self',
+          player,
           location: {
             type: 'bench',
+            ...(fromDeck && shuffle && { shuffle: true }),
           },
-          count: this.parseCount('pokemon'),
-          filters: this.parseFilters(),
+          count,
+          ...(filters && { filters }),
         },
       ],
     };
 
-    return effect as Effect;
+    return placeEffect;
   }
 
   protected parseFilters(): Filter[] | undefined {

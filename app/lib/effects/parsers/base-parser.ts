@@ -1,14 +1,15 @@
+import { TokenizedPhrase } from '../../effect-parser';
 import {
-  BaseEffect,
+  Effect,
   Target,
   Location,
   Filter,
   Condition,
   Modifier,
 } from '../types';
-import type { TokenizedPhrase } from '../../effect-parser';
+import * as kuromoji from 'kuromoji';
 
-export abstract class BaseParser<T extends BaseEffect> {
+export abstract class BaseParser<T extends Effect = Effect> {
   protected text: string;
   protected tokens: TokenizedPhrase['tokens'];
 
@@ -17,8 +18,91 @@ export abstract class BaseParser<T extends BaseEffect> {
     this.tokens = phrase.tokens;
   }
 
-  abstract canParse(): boolean;
+  /**
+   * Attempts to parse a tokenized phrase into an effect
+   * @returns The parsed effect or null if the phrase doesn't match this parser
+   */
   abstract parse(): T | T[] | null;
+
+  /**
+   * Checks if the current phrase can be parsed by this parser
+   */
+  abstract canParse(): boolean;
+
+  /**
+   * Checks if a token matches any of the given parts of speech
+   */
+  protected isPartOfSpeech(
+    token: kuromoji.IpadicFeatures,
+    ...pos: string[]
+  ): boolean {
+    return pos.includes(token.pos);
+  }
+
+  /**
+   * Checks if a token matches the given reading
+   */
+  protected hasReading(
+    token: kuromoji.IpadicFeatures,
+    reading: string
+  ): boolean {
+    return token.reading === reading;
+  }
+
+  /**
+   * Checks if a token matches the given base form
+   */
+  protected hasBaseForm(
+    token: kuromoji.IpadicFeatures,
+    baseForm: string
+  ): boolean {
+    return token.basic_form === baseForm;
+  }
+
+  /**
+   * Finds the next token that matches the predicate
+   */
+  protected findNextToken(
+    tokens: kuromoji.IpadicFeatures[],
+    startIndex: number,
+    predicate: (token: kuromoji.IpadicFeatures) => boolean
+  ): { token: kuromoji.IpadicFeatures; index: number } | null {
+    for (let i = startIndex; i < tokens.length; i++) {
+      if (predicate(tokens[i])) {
+        return { token: tokens[i], index: i };
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Extracts a number from a token's surface form
+   */
+  protected extractNumber(token: kuromoji.IpadicFeatures): number | null {
+    const num = parseInt(token.surface_form, 10);
+    return isNaN(num) ? null : num;
+  }
+
+  /**
+   * Gets all tokens between two indices
+   */
+  protected getTokensBetween(
+    tokens: kuromoji.IpadicFeatures[],
+    startIndex: number,
+    endIndex: number
+  ): kuromoji.IpadicFeatures[] {
+    return tokens.slice(startIndex + 1, endIndex);
+  }
+
+  /**
+   * Joins token surface forms with optional separator
+   */
+  protected joinTokens(
+    tokens: kuromoji.IpadicFeatures[],
+    separator: string = ''
+  ): string {
+    return tokens.map(t => t.surface_form).join(separator);
+  }
 
   protected parseTargets(): Target[] | undefined {
     const targets: Target[] = [];

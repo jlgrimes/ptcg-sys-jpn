@@ -3,17 +3,16 @@ import { Effect, EffectType } from '../types';
 
 export class AbilityParser extends BaseParser<Effect> {
   canParse(): boolean {
-    return (
-      this.text.includes('特性') ||
-      this.text.includes('効果を受けない') ||
-      this.text.includes('バトルポケモンのとき')
-    );
+    return this.text.includes('特性');
   }
 
-  parse(): Effect | null {
+  parse(): Effect | Effect[] | null {
     if (!this.canParse()) return null;
 
-    const effect: Partial<Effect> = {
+    const effects: Effect[] = [];
+
+    // Parse ability effect
+    const abilityEffect: Partial<Effect> = {
       type: EffectType.Ability,
       targets: [
         {
@@ -26,15 +25,60 @@ export class AbilityParser extends BaseParser<Effect> {
       ],
     };
 
+    // Parse timing restrictions
+    if (this.text.includes('1ターンに1回')) {
+      const abilityName = this.parseAbilityName();
+      abilityEffect.timing = {
+        type: 'once-per-turn',
+        restriction: {
+          type: 'ability-not-used',
+          abilityName,
+        },
+      };
+    }
+
+    // Parse continuous effects
+    if (this.text.includes('バトルポケモンのとき')) {
+      abilityEffect.timing = {
+        type: 'continuous',
+        condition: 'active',
+      };
+    }
+
+    // Parse coin flip conditions with damage prevention
+    if (
+      this.text.includes('コインを') &&
+      this.text.includes('ダメージを受けない')
+    ) {
+      abilityEffect.conditions = [
+        {
+          type: 'coin-flip',
+          value: 1,
+          onSuccess: [
+            {
+              type: EffectType.Status,
+              modifiers: [
+                {
+                  type: 'prevent',
+                  what: 'damage',
+                },
+              ],
+            },
+          ],
+        },
+      ];
+    }
+
+    // Parse modifiers
     if (this.text.includes('効果を受けない')) {
-      effect.modifiers = [
+      abilityEffect.modifiers = [
         {
           type: 'immunity',
           what: 'ability',
         },
       ];
-    } else if (this.text.includes('無効')) {
-      effect.modifiers = [
+    } else if (this.text.includes('特性は無効')) {
+      abilityEffect.modifiers = [
         {
           type: 'nullify',
           what: 'ability',
@@ -42,44 +86,38 @@ export class AbilityParser extends BaseParser<Effect> {
       ];
     }
 
-    if (this.text.includes('1回使える')) {
-      effect.timing = {
-        type: 'once-per-turn',
-        restriction: {
-          type: 'ability-not-used',
-          abilityName: this.parseAbilityName(),
+    effects.push(abilityEffect as Effect);
+
+    // Parse search effect if present
+    if (this.text.includes('山札から') && this.text.includes('手札に加える')) {
+      const searchEffect: Effect = {
+        type: EffectType.Search,
+        targets: [
+          {
+            type: 'pokemon',
+            player: 'self',
+            location: {
+              type: 'deck',
+            },
+            count: 1,
+          },
+        ],
+        timing: {
+          type: 'once-per-turn',
+          restriction: {
+            type: 'ability-not-used',
+            abilityName: this.parseAbilityName(),
+          },
         },
       };
-    } else if (this.text.includes('バトルポケモンのとき')) {
-      effect.timing = {
-        type: 'continuous',
-        condition: 'active',
-      };
+      effects.push(searchEffect);
     }
 
-    const conditions = this.parseConditions();
-    if (conditions) {
-      effect.conditions = conditions.map(condition => {
-        if (condition.type === 'coin-flip') {
-          return {
-            ...condition,
-            onSuccess: [
-              {
-                type: EffectType.Status,
-                status: 'paralyzed',
-              },
-            ],
-          };
-        }
-        return condition;
-      });
-    }
-
-    return effect as Effect;
+    return effects.length === 1 ? effects[0] : effects;
   }
 
   private parseAbilityName(): string {
-    const match = this.text.match(/「([^」]+)」/);
+    const match = this.text.match(/特性「([^」]+)」/);
     return match ? match[1] : '';
   }
 }

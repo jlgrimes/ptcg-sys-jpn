@@ -32,4 +32,27 @@ describe('Effect Parser', () => {
     const effects = await parseEffectText(text);
     expect(effects).toEqual(expectedEffects);
   });
+
+  it('should parse basic damage effect', async () => {
+    const text = '20ダメージ';
+    const expectedEffects = [
+      {
+        type: 'damage',
+        value: 20,
+        targets: [
+          {
+            type: 'pokemon',
+            player: 'opponent',
+            count: 1,
+            location: {
+              type: 'active',
+            },
+          },
+        ],
+      },
+    ];
+
+    const effects = await parseEffectText(text);
+    expect(effects).toEqual(expectedEffects);
+  });
 });

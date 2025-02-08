@@ -3,7 +3,13 @@ import { Effect, EffectType } from '../types';
 
 export class BenchDamageParser extends BaseParser<Effect> {
   canParse(): boolean {
-    return this.text.includes('ベンチ') && this.text.includes('ダメージ');
+    // Only parse if it's specifically about bench damage
+    return (
+      this.text.includes('ベンチポケモン') &&
+      this.text.includes('ダメージ') &&
+      !this.text.includes('バトルポケモン') && // Avoid matching when it's about battle pokemon
+      !this.text.includes('効果を計算しない') // Avoid matching when it's about effect calculation
+    );
   }
 
   parse(): Effect | null {
@@ -15,20 +21,24 @@ export class BenchDamageParser extends BaseParser<Effect> {
       targets: [
         {
           type: 'pokemon',
-          player: 'opponent',
+          player: this.text.includes('相手の') ? 'opponent' : 'self',
           location: {
             type: 'bench',
           },
-          count: this.parseCountWithAll('pokemon'),
+          count: this.text.includes('全員') ? 'all' : 1,
         },
       ],
-      modifiers: [
+    };
+
+    // Only add modifiers if explicitly mentioned
+    if (this.text.includes('弱点・抵抗力を計算しない')) {
+      effect.modifiers = [
         {
           type: 'ignore',
           what: 'effects',
         },
-      ],
-    };
+      ];
+    }
 
     return effect as Effect;
   }

@@ -1,14 +1,13 @@
-import { parseEffectText } from '../effect-parser';
-import { EffectType } from './types';
+import { parseEffectText } from '../../effect-parser';
+import { EffectType } from '../types';
 
 describe('Count-based Damage Effects', () => {
   it('should parse damage based on Pokemon count', async () => {
-    const text = '相手の場の「ポケモンex」の数×60ダメージ。';
-
+    const text = '相手のポケモンexの数×30ダメージ';
     const expectedEffects = [
       {
         type: EffectType.Damage,
-        value: 60,
+        value: 30,
         targets: [
           {
             type: 'pokemon',

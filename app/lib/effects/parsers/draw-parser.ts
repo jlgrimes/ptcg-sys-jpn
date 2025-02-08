@@ -26,7 +26,8 @@ export class DrawParser extends BaseParser<Effect> {
     return effect as Effect;
   }
 
-  private parseDrawCount(): number {
-    return this.parseCount('card');
+  protected parseDrawCount(): number {
+    const match = this.text.match(/(\d+)枚引く/);
+    return match ? parseInt(match[1]) : 1;
   }
 }

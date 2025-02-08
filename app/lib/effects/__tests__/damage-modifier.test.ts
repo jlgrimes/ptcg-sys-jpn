@@ -1,5 +1,5 @@
-import { parseEffectText } from '../effect-parser';
-import { EffectType } from './types';
+import { parseEffectText } from '../../effect-parser';
+import { EffectType } from '../types';
 
 describe('Damage Modifier Effects', () => {
   it('should parse ignore effects modifier', async () => {

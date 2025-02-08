@@ -1,9 +1,15 @@
 import { BaseParser } from './base-parser';
-import { Effect, EffectType, Filter } from '../types';
+import { Effect, EffectType } from '../types';
 
 export class CountDamageParser extends BaseParser<Effect> {
   canParse(): boolean {
-    return this.text.includes('数') && this.text.includes('ダメージ');
+    // Only parse if it's about counting something for damage
+    return (
+      this.text.includes('×') &&
+      this.text.includes('ダメージ') &&
+      (this.text.includes('の数') || this.text.includes('の枚数')) &&
+      !this.text.includes('効果を計算しない') // Avoid matching when it's about effect calculation
+    );
   }
 
   parse(): Effect | null {
@@ -29,9 +35,14 @@ export class CountDamageParser extends BaseParser<Effect> {
             player: 'opponent',
             location: {
               type: this.text.includes('手札') ? 'hand' : 'field',
-              reveal: this.text.includes('見る'),
+              ...(this.text.includes('見る') && { reveal: true }),
             },
-            filters: this.parseCountFilters(),
+            filters: [
+              {
+                type: 'card-type',
+                value: this.parseCardType(),
+              },
+            ],
           },
         },
       ],
@@ -45,14 +56,9 @@ export class CountDamageParser extends BaseParser<Effect> {
     return match ? parseInt(match[1]) : 0;
   }
 
-  private parseCountFilters(): Filter[] {
-    return [
-      {
-        type: 'card-type' as const,
-        value: this.text.includes('トレーナーズ')
-          ? 'トレーナーズ'
-          : 'ポケモンex',
-      },
-    ];
+  private parseCardType(): string {
+    if (this.text.includes('ポケモンex')) return 'ポケモンex';
+    if (this.text.includes('トレーナーズ')) return 'トレーナーズ';
+    return '';
   }
 }

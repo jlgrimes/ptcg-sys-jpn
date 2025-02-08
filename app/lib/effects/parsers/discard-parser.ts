@@ -3,7 +3,10 @@ import { Effect, EffectType } from '../types';
 
 export class DiscardParser extends BaseParser<Effect> {
   canParse(): boolean {
-    return this.text.includes('トラッシュする');
+    return (
+      this.text.includes('トラッシュ') &&
+      (this.text.includes('枚') || this.text.includes('個'))
+    );
   }
 
   parse(): Effect | null {
@@ -18,7 +21,7 @@ export class DiscardParser extends BaseParser<Effect> {
           location: {
             type: 'discard',
           },
-          count: this.parseDiscardCount(),
+          count: this.parseCount(),
         },
       ],
     };
@@ -26,9 +29,8 @@ export class DiscardParser extends BaseParser<Effect> {
     return effect as Effect;
   }
 
-  private parseDiscardCount(): number {
-    return this.text.includes('エネルギー')
-      ? this.parseCount('energy')
-      : this.parseCount('card');
+  protected parseCount(): number {
+    const match = this.text.match(/(\d+)(枚|個)/);
+    return match ? parseInt(match[1]) : 1;
   }
 }
