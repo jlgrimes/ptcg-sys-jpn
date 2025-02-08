@@ -4,27 +4,8 @@ import { EffectType } from '../types';
 describe('Ability Effects', () => {
   it('should parse once per turn search ability', async () => {
     const text =
-      '特性「マッハサーチ」：1ターンに1回使える。山札から1枚選び、手札に加える。';
+      '自分の番に1回使える。自分の山札から好きなカードを1枚選び、手札に加える。そして山札を切る。この番、すでに別の「マッハサーチ」を使っていたなら、この特性は使えない。';
     const expectedEffects = [
-      {
-        type: EffectType.Ability,
-        targets: [
-          {
-            type: 'pokemon',
-            player: 'self',
-            location: {
-              type: 'active',
-            },
-          },
-        ],
-        timing: {
-          type: 'once-per-turn',
-          restriction: {
-            type: 'ability-not-used',
-            abilityName: 'マッハサーチ',
-          },
-        },
-      },
       {
         type: EffectType.Search,
         targets: [
@@ -33,16 +14,13 @@ describe('Ability Effects', () => {
             player: 'self',
             location: {
               type: 'deck',
+              shuffle: true,
             },
             count: 1,
           },
         ],
         timing: {
           type: 'once-per-turn',
-          restriction: {
-            type: 'ability-not-used',
-            abilityName: 'マッハサーチ',
-          },
         },
       },
     ];
@@ -84,7 +62,7 @@ describe('Ability Effects', () => {
 
     const expectedEffects = [
       {
-        type: EffectType.Ability,
+        type: EffectType.Status,
         timing: {
           type: 'continuous',
           condition: 'active',
@@ -161,25 +139,6 @@ describe('Ability Effects', () => {
 
     const expectedEffects = [
       {
-        type: EffectType.Ability,
-        targets: [
-          {
-            type: 'pokemon',
-            player: 'self',
-            location: {
-              type: 'active',
-            },
-          },
-        ],
-        timing: {
-          type: 'once-per-turn',
-          restriction: {
-            type: 'ability-not-used',
-            abilityName: 'さかてにとる',
-          },
-        },
-      },
-      {
         type: EffectType.Draw,
         value: 3,
         targets: [
@@ -193,10 +152,6 @@ describe('Ability Effects', () => {
         ],
         timing: {
           type: 'once-per-turn',
-          restriction: {
-            type: 'ability-not-used',
-            abilityName: 'さかてにとる',
-          },
         },
       },
     ];
@@ -210,43 +165,6 @@ describe('Ability Effects', () => {
       '自分の番に、このカードを手札から出して進化させたとき、自分の場に「テラスタル」のポケモンがいるなら、1回使える。自分の山札からトレーナーズを2枚まで選び、相手に見せて、手札に加える。そして山札を切る。';
 
     const expectedEffects = [
-      {
-        type: EffectType.Ability,
-        targets: [
-          {
-            type: 'pokemon',
-            player: 'self',
-            location: {
-              type: 'active',
-            },
-          },
-        ],
-        timing: {
-          type: 'on-evolution',
-          restriction: {
-            type: 'ability-not-used',
-            abilityName: '',
-          },
-        },
-        conditions: [
-          {
-            type: 'card-count',
-            target: {
-              type: 'pokemon',
-              player: 'self',
-              location: {
-                type: 'field',
-              },
-              filters: [
-                {
-                  type: 'card-type',
-                  value: 'テラスタル',
-                },
-              ],
-            },
-          },
-        ],
-      },
       {
         type: EffectType.Search,
         targets: [
@@ -268,11 +186,25 @@ describe('Ability Effects', () => {
         ],
         timing: {
           type: 'on-evolution',
-          restriction: {
-            type: 'ability-not-used',
-            abilityName: '',
-          },
         },
+        conditions: [
+          {
+            type: 'card-count',
+            target: {
+              type: 'pokemon',
+              player: 'self',
+              location: {
+                type: 'field',
+              },
+              filters: [
+                {
+                  type: 'card-type',
+                  value: 'テラスタル',
+                },
+              ],
+            },
+          },
+        ],
       },
       {
         type: EffectType.Shuffle,
@@ -294,23 +226,8 @@ describe('Ability Effects', () => {
 
   it('should parse Mew ex Restart ability', async () => {
     const text =
-      '特性「リスタート」：自分の番に1回使える。自分の手札が3枚になるように、山札を引く。';
+      '自分の番に1回使える。自分の手札が3枚になるように、山札を引く。';
     const expectedEffects = [
-      {
-        type: EffectType.Ability,
-        targets: [
-          {
-            type: 'pokemon',
-            player: 'self',
-            location: {
-              type: 'active',
-            },
-          },
-        ],
-        timing: {
-          type: 'once-per-turn',
-        },
-      },
       {
         type: EffectType.Draw,
         targets: [
@@ -322,6 +239,9 @@ describe('Ability Effects', () => {
             },
           },
         ],
+        timing: {
+          type: 'once-per-turn',
+        },
         conditions: [
           {
             type: 'card-count',

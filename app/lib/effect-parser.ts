@@ -1,10 +1,11 @@
 import * as kuromoji from 'kuromoji';
-import { Effect, EffectType, Timing } from './effects/types';
+import { Effect, Timing } from './effects/types';
 import { parseEffect } from './effects/parsers';
 
 export interface TokenizedPhrase {
   text: string;
   tokens: kuromoji.IpadicFeatures[];
+  timing?: Timing;
 }
 
 export class EffectParseError extends Error {
@@ -47,48 +48,14 @@ export async function parseEffectText(text: string): Promise<Effect[]> {
 
   try {
     const tokenizer = await getTokenizer();
-    const effects: Effect[] = [];
-
-    // Check if this is an ability
-    const isAbility = text.includes('特性「');
     const timing = parseTiming(text);
+    const tokens = tokenizer.tokenize(text);
 
-    // Parse the effects
-    const effectText = isAbility
-      ? text.replace(/特性「.+?」：?/, '').trim()
-      : text;
-    const parsedEffects = parseEffect({
-      text: effectText,
-      tokens: tokenizer.tokenize(effectText),
+    return parseEffect({
+      text,
+      tokens,
+      timing,
     });
-
-    // If this is an ability, add the ability effect first
-    if (isAbility) {
-      effects.push({
-        type: EffectType.Ability,
-        targets: [
-          {
-            type: 'pokemon',
-            player: 'self',
-            location: {
-              type: 'active',
-            },
-          },
-        ],
-        timing,
-        ...(text.includes('効果を受けない') && {
-          modifiers: [{ type: 'immunity', what: 'ability' }],
-        }),
-        ...(text.includes('特性は無効') && {
-          modifiers: [{ type: 'nullify', what: 'ability' }],
-        }),
-      });
-    }
-
-    // Add the parsed effects
-    effects.push(...parsedEffects);
-
-    return effects;
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : String(error);
     throw new EffectParseError(`Failed to parse effect text: ${message}`, text);

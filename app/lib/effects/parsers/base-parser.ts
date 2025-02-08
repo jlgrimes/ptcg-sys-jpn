@@ -13,10 +13,12 @@ import * as kuromoji from 'kuromoji';
 export abstract class BaseParser<T extends Effect = Effect> {
   protected text: string;
   protected tokens: TokenizedPhrase['tokens'];
+  protected timing?: TokenizedPhrase['timing'];
 
   constructor(phrase: TokenizedPhrase) {
     this.text = phrase.text;
     this.tokens = phrase.tokens;
+    this.timing = phrase.timing;
   }
 
   /**
@@ -113,7 +115,6 @@ export abstract class BaseParser<T extends Effect = Effect> {
     const targets = options.targets || this.parseTargets();
     const conditions = this.parseConditions();
     const modifiers = this.parseModifiers();
-    const timing = this.parseTiming();
 
     return {
       type,
@@ -121,7 +122,7 @@ export abstract class BaseParser<T extends Effect = Effect> {
       ...(targets && { targets }),
       ...(conditions && { conditions }),
       ...(modifiers && { modifiers }),
-      ...(timing && { timing }),
+      ...(this.timing && { timing: this.timing }),
     } as Effect;
   }
 
@@ -277,33 +278,6 @@ export abstract class BaseParser<T extends Effect = Effect> {
     }
 
     return modifiers.length > 0 ? modifiers : undefined;
-  }
-
-  protected parseTiming(): Effect['timing'] | undefined {
-    if (this.text.includes('1ターンに1回')) {
-      const abilityName = this.parseAbilityName();
-      return {
-        type: 'once-per-turn',
-        restriction: {
-          type: 'ability-not-used',
-          abilityName,
-        },
-      };
-    }
-
-    if (this.text.includes('バトルポケモンのとき')) {
-      return {
-        type: 'continuous',
-        condition: 'active',
-      };
-    }
-
-    return undefined;
-  }
-
-  protected parseAbilityName(): string {
-    const match = this.text.match(/特性「([^」]+)」/);
-    return match ? match[1] : '';
   }
 
   protected parseDamageValue(): number {

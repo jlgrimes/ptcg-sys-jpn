@@ -3,38 +3,76 @@ import { Effect, EffectType } from '../types';
 
 export class StatusParser extends BaseParser<Effect> {
   canParse(): boolean {
-    return this.text.includes('状態');
+    return (
+      this.text.includes('状態') ||
+      this.text.includes('効果を受けない') ||
+      this.text.includes('特性は無効')
+    );
   }
 
   parse(): Effect | null {
     if (!this.canParse()) return null;
 
-    const effect: Partial<Effect> = {
-      type: EffectType.Status,
-      targets: [
-        {
-          type: 'pokemon',
-          player: 'opponent',
-          location: {
-            type: 'active',
-          },
-        },
-      ],
-      conditions: [
-        {
-          type: 'coin-flip',
-          value: 1,
-          onSuccess: [
-            {
-              type: EffectType.Status,
-              status: this.parseStatusType(),
+    // Handle ability immunity
+    if (this.text.includes('効果を受けない')) {
+      return this.createEffect(EffectType.Ability, {
+        targets: [
+          {
+            type: 'pokemon',
+            player: 'self',
+            location: {
+              type: 'active',
             },
-          ],
-        },
-      ],
-    };
+          },
+        ],
+        modifiers: [{ type: 'immunity', what: 'ability' }],
+      });
+    }
 
-    return effect as Effect;
+    // Handle ability nullification
+    if (this.text.includes('特性は無効')) {
+      return this.createEffect(EffectType.Ability, {
+        targets: [
+          {
+            type: 'pokemon',
+            player: 'opponent',
+            location: {
+              type: 'active',
+            },
+          },
+        ],
+        modifiers: [{ type: 'nullify', what: 'ability' }],
+      });
+    }
+
+    // Handle regular status effects
+    if (this.text.includes('状態')) {
+      return this.createEffect(EffectType.Status, {
+        targets: [
+          {
+            type: 'pokemon',
+            player: 'opponent',
+            location: {
+              type: 'active',
+            },
+          },
+        ],
+        conditions: [
+          {
+            type: 'coin-flip',
+            value: 1,
+            onSuccess: [
+              {
+                type: EffectType.Status,
+                status: this.parseStatusType(),
+              },
+            ],
+          },
+        ],
+      });
+    }
+
+    return null;
   }
 
   private parseStatusType(): Effect['status'] {

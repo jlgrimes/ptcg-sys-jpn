@@ -9,8 +9,7 @@ export class DrawParser extends BaseParser<Effect> {
   parse(): Effect | null {
     if (!this.canParse()) return null;
 
-    const effect: Effect = {
-      type: EffectType.Draw,
+    const effect = this.createEffect(EffectType.Draw, {
       targets: [
         {
           type: 'pokemon',
@@ -20,7 +19,7 @@ export class DrawParser extends BaseParser<Effect> {
           },
         },
       ],
-    };
+    });
 
     // Handle specific hand size condition
     const handSizeMatch = this.text.match(/(\d+)枚になるように/);
