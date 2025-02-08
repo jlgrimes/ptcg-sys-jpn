@@ -1,9 +1,9 @@
 import { BaseParser } from './base-parser';
 import { Effect, EffectType } from '../types';
 
-export class DamageParser extends BaseParser<Effect> {
+export class BenchDamageParser extends BaseParser<Effect> {
   canParse(): boolean {
-    return this.text.includes('ダメージ');
+    return this.text.includes('ベンチ') && this.text.includes('ダメージ');
   }
 
   parse(): Effect | null {
@@ -17,18 +17,18 @@ export class DamageParser extends BaseParser<Effect> {
           type: 'pokemon',
           player: 'opponent',
           location: {
-            type: this.text.includes('ベンチ') ? 'bench' : 'active',
+            type: 'bench',
           },
-          count: this.parseCount('pokemon'),
+          count: this.parseCountWithAll('pokemon'),
+        },
+      ],
+      modifiers: [
+        {
+          type: 'ignore',
+          what: 'effects',
         },
       ],
     };
-
-    const modifiers = this.parseModifiers();
-    if (modifiers) effect.modifiers = modifiers;
-
-    const conditions = this.parseConditions();
-    if (conditions) effect.conditions = conditions;
 
     return effect as Effect;
   }

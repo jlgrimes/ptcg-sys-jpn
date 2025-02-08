@@ -30,7 +30,7 @@ export abstract class BaseParser<T extends BaseEffect> {
         location: this.parseLocation(),
       };
 
-      const count = this.parseCount();
+      const count = this.parseCountWithAll();
       if (count) target.count = count;
 
       const filters = this.parseFilters();
@@ -61,9 +61,32 @@ export abstract class BaseParser<T extends BaseEffect> {
     return location as Location;
   }
 
-  protected parseCount(): number | 'all' | undefined {
-    const match = this.text.match(/(\d+)(枚|個|匹)/);
-    return match ? parseInt(match[1]) : undefined;
+  protected parseCount(type: 'card' | 'energy' | 'pokemon' = 'card'): number {
+    if (type === 'energy') {
+      const energyMatch = this.text.match(/エネルギーを(\d+)個/);
+      if (energyMatch) {
+        return parseInt(energyMatch[1]);
+      }
+    }
+
+    if (type === 'pokemon') {
+      const pokemonMatch = this.text.match(/(\d+)匹/);
+      if (pokemonMatch) {
+        return parseInt(pokemonMatch[1]);
+      }
+    }
+
+    const cardMatch = this.text.match(/(\d+)枚/);
+    return cardMatch ? parseInt(cardMatch[1]) : 1;
+  }
+
+  protected parseCountWithAll(
+    type: 'card' | 'energy' | 'pokemon' = 'card'
+  ): number | 'all' {
+    if (this.text.includes('全員') || this.text.includes('すべて')) {
+      return 'all';
+    }
+    return this.parseCount(type);
   }
 
   protected parseFilters(): Filter[] | undefined {

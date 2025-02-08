@@ -1,32 +1,33 @@
 import { BaseParser } from './base-parser';
 import { Effect, EffectType } from '../types';
 
-export class DrawParser extends BaseParser<Effect> {
+export class DamageModifierParser extends BaseParser<Effect> {
   canParse(): boolean {
-    return this.text.includes('引く');
+    return this.text.includes('効果を計算しない');
   }
 
   parse(): Effect | null {
     if (!this.canParse()) return null;
 
     const effect: Partial<Effect> = {
-      type: EffectType.Draw,
-      value: this.parseDrawCount(),
+      type: EffectType.Damage,
       targets: [
         {
           type: 'pokemon',
-          player: 'self',
+          player: 'opponent',
           location: {
-            type: 'deck',
+            type: this.text.includes('ベンチ') ? 'bench' : 'active',
           },
+        },
+      ],
+      modifiers: [
+        {
+          type: 'ignore',
+          what: 'effects',
         },
       ],
     };
 
     return effect as Effect;
-  }
-
-  private parseDrawCount(): number {
-    return this.parseCount('card');
   }
 }

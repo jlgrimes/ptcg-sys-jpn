@@ -18,11 +18,17 @@ export class DiscardParser extends BaseParser<Effect> {
           location: {
             type: 'discard',
           },
-          count: 1,
+          count: this.parseDiscardCount(),
         },
       ],
     };
 
     return effect as Effect;
+  }
+
+  private parseDiscardCount(): number {
+    return this.text.includes('エネルギー')
+      ? this.parseCount('energy')
+      : this.parseCount('card');
   }
 }

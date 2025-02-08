@@ -22,7 +22,7 @@ export class SearchParser extends BaseParser<Effect> {
             type: 'deck',
             shuffle: this.text.includes('切る'),
           },
-          count: 1,
+          count: this.parseCount('card'),
         },
       ],
     };

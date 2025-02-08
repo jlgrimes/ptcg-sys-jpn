@@ -1,5 +1,5 @@
 import * as kuromoji from 'kuromoji';
-import { Effect, EffectType } from './effects/types';
+import { Effect } from './effects/types';
 import { parseEffect } from './effects/parsers';
 
 export interface TokenizedPhrase {

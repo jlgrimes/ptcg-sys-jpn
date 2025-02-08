@@ -1,5 +1,5 @@
 import { BaseParser } from './base-parser';
-import { Effect, EffectType } from '../types';
+import { Effect, EffectType, Filter } from '../types';
 
 export class EnergyParser extends BaseParser<Effect> {
   canParse(): boolean {
@@ -16,13 +16,31 @@ export class EnergyParser extends BaseParser<Effect> {
           type: 'pokemon',
           player: 'self',
           location: {
-            type: 'bench',
+            type: this.text.includes('トラッシュ') ? 'discard' : 'bench',
           },
-          count: 1,
+          count: this.getEnergyCount(),
+          filters: this.parseFilters(),
         },
       ],
     };
 
     return effect as Effect;
+  }
+
+  private getEnergyCount(): number {
+    return this.parseCount('energy');
+  }
+
+  protected parseFilters(): Filter[] | undefined {
+    const filters: Filter[] = [];
+
+    if (this.text.includes('基本エネルギー')) {
+      filters.push({
+        type: 'card-type' as const,
+        value: 'basic',
+      });
+    }
+
+    return filters.length > 0 ? filters : undefined;
   }
 }

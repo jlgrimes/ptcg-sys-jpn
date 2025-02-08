@@ -10,6 +10,9 @@ import { EnergyParser } from './energy-parser';
 import { PlaceParser } from './place-parser';
 import { MoveRestrictionParser } from './move-restriction-parser';
 import { ConditionParser } from './condition-parser';
+import { BenchDamageParser } from './bench-damage-parser';
+import { DamageModifierParser } from './damage-modifier-parser';
+import { CountDamageParser } from './count-damage-parser';
 
 const parsers = [
   DamageParser,
@@ -22,6 +25,9 @@ const parsers = [
   PlaceParser,
   MoveRestrictionParser,
   ConditionParser,
+  BenchDamageParser,
+  DamageModifierParser,
+  CountDamageParser,
 ];
 
 export function parseEffect(phrase: TokenizedPhrase): Effect | Effect[] | null {
@@ -45,4 +51,7 @@ export {
   PlaceParser,
   MoveRestrictionParser,
   ConditionParser,
+  BenchDamageParser,
+  DamageModifierParser,
+  CountDamageParser,
 };

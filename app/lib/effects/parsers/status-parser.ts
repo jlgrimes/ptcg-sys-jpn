@@ -1,5 +1,5 @@
 import { BaseParser } from './base-parser';
-import { Effect, EffectType, StatusEffect } from '../types';
+import { Effect, EffectType } from '../types';
 
 export class StatusParser extends BaseParser<Effect> {
   canParse(): boolean {
@@ -9,12 +9,8 @@ export class StatusParser extends BaseParser<Effect> {
   parse(): Effect | null {
     if (!this.canParse()) return null;
 
-    const status = this.parseStatusType();
-    if (!status) return null;
-
-    const effect: Partial<StatusEffect> = {
+    const effect: Partial<Effect> = {
       type: EffectType.Status,
-      status,
       targets: [
         {
           type: 'pokemon',
@@ -24,17 +20,29 @@ export class StatusParser extends BaseParser<Effect> {
           },
         },
       ],
+      conditions: [
+        {
+          type: 'coin-flip',
+          value: 1,
+          onSuccess: [
+            {
+              type: EffectType.Status,
+              status: this.parseStatusType(),
+            },
+          ],
+        },
+      ],
     };
 
     return effect as Effect;
   }
 
-  private parseStatusType(): StatusEffect['status'] | null {
+  private parseStatusType(): Effect['status'] {
     if (this.text.includes('マヒ状態')) return 'paralyzed';
     if (this.text.includes('眠り状態')) return 'asleep';
     if (this.text.includes('こんらん状態')) return 'confused';
     if (this.text.includes('やけど')) return 'burned';
     if (this.text.includes('どく')) return 'poisoned';
-    return null;
+    return 'paralyzed';
   }
 }
