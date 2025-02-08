@@ -110,13 +110,18 @@ export abstract class BaseParser<T extends Effect = Effect> {
     type: EffectType,
     options: Partial<Effect> = {}
   ): Effect {
+    const targets = options.targets || this.parseTargets();
+    const conditions = this.parseConditions();
+    const modifiers = this.parseModifiers();
+    const timing = this.parseTiming();
+
     return {
       type,
       ...options,
-      targets: options.targets || this.parseTargets(),
-      ...(this.parseConditions() && { conditions: this.parseConditions() }),
-      ...(this.parseModifiers() && { modifiers: this.parseModifiers() }),
-      ...(this.parseTiming() && { timing: this.parseTiming() }),
+      ...(targets && { targets }),
+      ...(conditions && { conditions }),
+      ...(modifiers && { modifiers }),
+      ...(timing && { timing }),
     } as Effect;
   }
 
@@ -132,7 +137,7 @@ export abstract class BaseParser<T extends Effect = Effect> {
       };
 
       const count = this.parseCountWithAll(targetType);
-      if (count) target.count = count;
+      if (count !== undefined && count !== 1) target.count = count;
 
       const filters = this.parseFilters();
       if (filters) target.filters = filters;

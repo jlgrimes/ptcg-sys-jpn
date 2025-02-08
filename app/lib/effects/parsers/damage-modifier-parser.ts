@@ -11,8 +11,10 @@ export class DamageModifierParser extends BaseParser<Effect> {
   parse(): Effect | null {
     if (!this.canParse()) return null;
 
-    return this.createEffect(EffectType.Damage, {
-      value: this.parseDamageValue() || undefined,
-    });
+    const damageValue = this.parseDamageValue();
+    const options: Partial<Effect> = {};
+    if (damageValue > 0) options.value = damageValue;
+
+    return this.createEffect(EffectType.Damage, options);
   }
 }

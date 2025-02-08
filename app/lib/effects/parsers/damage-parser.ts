@@ -14,6 +14,13 @@ export class DamageParser extends BaseParser<Effect> {
 
     return this.createEffect(EffectType.Damage, {
       value: damageValue,
+      targets: [
+        {
+          type: 'pokemon',
+          player: 'opponent',
+          location: { type: 'active' },
+        },
+      ],
     });
   }
 }

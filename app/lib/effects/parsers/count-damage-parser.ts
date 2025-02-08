@@ -24,10 +24,7 @@ export class CountDamageParser extends BaseParser<Effect> {
         {
           type: 'pokemon',
           player: 'opponent',
-          location: {
-            type: 'active',
-          },
-          count: 1,
+          location: { type: 'active' },
         },
       ],
       conditions: [

@@ -5,8 +5,7 @@ export class BenchPlacementParser extends BaseParser<Effect> {
   canParse(): boolean {
     return (
       this.text.includes('ベンチ') &&
-      this.text.includes('出す') &&
-      (this.text.includes('山札から') || this.text.includes('手札から'))
+      (this.text.includes('出す') || this.text.includes('置く'))
     );
   }
 
@@ -14,44 +13,40 @@ export class BenchPlacementParser extends BaseParser<Effect> {
     if (!this.canParse()) return [];
 
     const effects: Effect[] = [];
-    const player = this.text.includes('相手の') ? 'opponent' : 'self';
-    const fromDeck = this.text.includes('山札から');
-    const filters = this.parseFilters();
+    const player = this.text.includes('相手') ? 'opponent' : 'self';
     const count = this.parseCount('pokemon');
+    const filters = this.parseFilters();
 
-    // Always create the place effect
-    effects.push({
-      type: EffectType.Place,
-      targets: [
-        {
-          type: 'pokemon',
-          player,
-          location: {
-            type: 'bench',
-          },
-          count,
-          ...(filters && { filters }),
-        },
-      ],
-    });
-
-    // Add search effect if from deck
-    if (fromDeck) {
-      effects.push({
-        type: EffectType.Search,
+    // Add place effect first
+    effects.push(
+      this.createEffect(EffectType.Place, {
         targets: [
           {
             type: 'pokemon',
             player,
-            location: {
-              type: 'deck',
-              shuffle: this.text.includes('切る'),
-            },
+            location: { type: 'bench' },
             count,
             ...(filters && { filters }),
           },
         ],
-      });
+      })
+    );
+
+    // Add search effect if from deck
+    if (this.text.includes('山札')) {
+      effects.push(
+        this.createEffect(EffectType.Search, {
+          targets: [
+            {
+              type: 'pokemon',
+              player,
+              location: { type: 'deck', shuffle: true },
+              count,
+              ...(filters && { filters }),
+            },
+          ],
+        })
+      );
     }
 
     return effects;

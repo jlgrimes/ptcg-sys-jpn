@@ -3,30 +3,48 @@ import { Effect, EffectType } from '../types';
 
 export class DiscardParser extends BaseParser<Effect> {
   canParse(): boolean {
-    return (
-      this.text.includes('トラッシュ') &&
-      (this.text.includes('枚') || this.text.includes('個'))
-    );
+    return this.text.includes('トラッシュ');
   }
 
-  parse(): Effect | null {
-    if (!this.canParse()) return null;
+  parse(): Effect[] {
+    if (!this.canParse()) return [];
 
-    const effect: Partial<Effect> = {
-      type: EffectType.Discard,
-      targets: [
-        {
-          type: 'pokemon',
-          player: 'self',
-          location: {
-            type: 'discard',
+    const effects: Effect[] = [];
+
+    // Add discard effect
+    effects.push(
+      this.createEffect(EffectType.Discard, {
+        targets: [
+          {
+            type: 'pokemon',
+            player: 'self',
+            location: { type: 'discard' },
+            count: this.parseCount(),
           },
-          count: this.parseCount(),
-        },
-      ],
-    };
+        ],
+      })
+    );
 
-    return effect as Effect;
+    // Add draw effect if present
+    if (this.text.includes('引く')) {
+      const drawMatch = this.text.match(/(\d+)枚引く/);
+      if (drawMatch) {
+        effects.push(
+          this.createEffect(EffectType.Draw, {
+            value: parseInt(drawMatch[1]),
+            targets: [
+              {
+                type: 'pokemon',
+                player: 'self',
+                location: { type: 'deck' },
+              },
+            ],
+          })
+        );
+      }
+    }
+
+    return effects;
   }
 
   protected parseCount(): number {

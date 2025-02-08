@@ -6,13 +6,59 @@ export class AbilityParser extends BaseParser<Effect> {
     return this.text.includes('特性');
   }
 
-  parse(): Effect | Effect[] | null {
-    if (!this.canParse()) return null;
+  parse(): Effect[] {
+    if (!this.canParse()) return [];
 
     const effects: Effect[] = [];
+    const player = this.text.includes('相手の') ? 'opponent' : 'self';
 
-    // Parse ability effect
-    effects.push(this.createEffect(EffectType.Ability));
+    const abilityEffect = this.createEffect(EffectType.Ability, {
+      targets: [
+        {
+          type: 'pokemon',
+          player,
+          location: { type: 'active' },
+        },
+      ],
+      timing: {
+        type: 'continuous',
+        condition: 'active',
+      },
+    });
+
+    if (
+      this.text.includes('コインを') &&
+      this.text.includes('ダメージを受けない')
+    ) {
+      abilityEffect.conditions = [
+        {
+          type: 'coin-flip',
+          value: 1,
+          onSuccess: [
+            {
+              type: EffectType.Status,
+              modifiers: [
+                {
+                  type: 'prevent',
+                  what: 'damage',
+                },
+              ],
+            },
+          ],
+        },
+      ];
+    }
+
+    if (this.text.includes('効果を受けない')) {
+      abilityEffect.modifiers = [
+        {
+          type: 'immunity',
+          what: 'ability',
+        },
+      ];
+    }
+
+    effects.push(abilityEffect);
 
     // Parse search effect if present
     if (this.text.includes('山札から') && this.text.includes('手札に加える')) {
@@ -37,6 +83,6 @@ export class AbilityParser extends BaseParser<Effect> {
       );
     }
 
-    return effects.length === 1 ? effects[0] : effects;
+    return effects;
   }
 }

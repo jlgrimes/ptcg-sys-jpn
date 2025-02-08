@@ -14,49 +14,46 @@ export class EnergyParser extends BaseParser<Effect> {
 
     const effects: Effect[] = [];
     const player = this.text.includes('相手の') ? 'opponent' : 'self';
-    const count = this.parseCount('energy');
+    const count = this.text.includes('まで') ? this.parseCount('energy') : 1;
     const filters = this.text.includes('基本エネルギー')
       ? [{ type: 'card-type' as const, value: 'basic' }]
       : undefined;
 
     if (this.text.includes('トラッシュする')) {
-      // Handle discard effect
-      effects.push({
-        type: EffectType.Discard,
-        targets: [
-          {
-            type: 'energy',
-            player,
-            location: {
-              type: 'discard',
-            },
-            count,
-          },
-        ],
-      });
-    } else {
-      // Handle attach effect
-      if (this.text.includes('トラッシュから')) {
-        // If attaching from discard, add search effect first
-        effects.push({
-          type: EffectType.Search,
+      effects.push(
+        this.createEffect(EffectType.Discard, {
           targets: [
             {
               type: 'energy',
               player,
-              location: {
-                type: 'discard',
-              },
+              location: { type: 'discard' },
+              count,
+            },
+          ],
+        })
+      );
+      return effects;
+    }
+
+    // Handle attach effect
+    if (this.text.includes('トラッシュから')) {
+      effects.push(
+        this.createEffect(EffectType.Search, {
+          targets: [
+            {
+              type: 'energy',
+              player,
+              location: { type: 'discard' },
               count,
               ...(filters && { filters }),
             },
           ],
-        });
-      }
+        })
+      );
+    }
 
-      // Add energy attach effect
-      effects.push({
-        type: EffectType.Energy,
+    effects.push(
+      this.createEffect(EffectType.Energy, {
         targets: [
           {
             type: 'pokemon',
@@ -64,11 +61,11 @@ export class EnergyParser extends BaseParser<Effect> {
             location: {
               type: this.text.includes('ベンチ') ? 'bench' : 'active',
             },
-            count: 1,
+            count,
           },
         ],
-      });
-    }
+      })
+    );
 
     return effects;
   }
