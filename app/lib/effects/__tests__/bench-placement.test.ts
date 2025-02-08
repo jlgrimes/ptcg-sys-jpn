@@ -58,7 +58,7 @@ describe('Bench Placement Effects', () => {
             location: {
               type: 'bench',
             },
-            count: 2,
+            count: 1,
             filters: [
               {
                 type: 'card-type',

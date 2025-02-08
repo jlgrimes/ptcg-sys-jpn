@@ -62,7 +62,7 @@ describe('Count-based Damage Effects', () => {
           {
             type: 'card-count',
             target: {
-              type: 'pokemon',
+              type: 'trainer',
               player: 'opponent',
               location: {
                 type: 'hand',
