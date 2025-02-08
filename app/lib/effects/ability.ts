@@ -1,4 +1,4 @@
-import { Effect, EffectType } from '../effect-parser';
+import { Effect, EffectType } from './types';
 import type { TokenizedPhrase } from '../effect-parser';
 
 interface AbilityTiming {
@@ -17,7 +17,6 @@ export interface AbilityEffect extends Effect {
 export function parseAbility(phrase: TokenizedPhrase): Effect | null {
   const { text } = phrase;
 
-  // Check if this is an ability effect
   if (
     !text.includes('使える') &&
     !text.includes('特性') &&
@@ -27,51 +26,48 @@ export function parseAbility(phrase: TokenizedPhrase): Effect | null {
     return null;
   }
 
-  // Check for damage prevention with coin flip
-  if (text.includes('バトルポケモンのとき') && text.includes('コインを')) {
-    return {
-      type: EffectType.Ability,
-      timing: {
-        type: 'continuous',
-        condition: 'active',
-      },
-      effect: {
-        type: 'damage-prevention',
-        coinFlips: 1,
-        target: 'opponent',
-        what: 'damage',
-        onHeads: true,
-      },
+  const effect: Partial<Effect> = {
+    type: EffectType.Ability,
+  };
+
+  if (text.includes('特性の効果を受けない')) {
+    effect.effect = {
+      type: 'immunity',
+      what: 'ability',
+      target: text.includes('相手の') ? 'opponent' : 'self',
     };
+    return effect as Effect;
   }
 
-  // Check for ability immunity
-  if (text.includes('特性の効果を受けない')) {
-    return {
-      type: EffectType.Ability,
-      effect: {
-        type: 'immunity',
-        what: 'ability',
-        target: text.includes('相手の') ? 'opponent' : 'self',
-      },
+  // Check for damage prevention with coin flip
+  if (text.includes('バトルポケモンのとき') && text.includes('コインを')) {
+    effect.timing = {
+      type: 'continuous',
+      condition: 'active',
     };
+    effect.effect = {
+      type: 'damage-prevention',
+      coinFlips: 1,
+      target: 'opponent',
+      what: 'damage',
+      onHeads: true,
+    };
+    return effect as Effect;
   }
 
   // Check for ability nullification
   if (text.includes('特性は無効')) {
-    return {
-      type: EffectType.Ability,
-      timing: {
-        type: 'continuous',
-        condition: 'active',
-      },
-      effect: {
-        type: 'nullify',
-        what: 'ability',
-        target: 'opponent',
-        location: 'active',
-      },
+    effect.timing = {
+      type: 'continuous',
+      condition: 'active',
     };
+    effect.effect = {
+      type: 'nullify',
+      what: 'ability',
+      target: 'opponent',
+      location: 'active',
+    };
+    return effect as Effect;
   }
 
   // Parse timing for search abilities
@@ -90,16 +86,15 @@ export function parseAbility(phrase: TokenizedPhrase): Effect | null {
 
   // Return search effect for search abilities
   if (text.includes('山札から') && text.includes('手札に加える')) {
-    return {
-      type: EffectType.Search,
-      target: 'self',
-      source: 'deck',
-      destination: 'hand',
-      count: 1,
-      selection: 'choose',
-      timing,
-      shuffle: text.includes('山札を切る'),
-    };
+    effect.timing = timing;
+    effect.type = EffectType.Search;
+    effect.target = 'self';
+    effect.source = 'deck';
+    effect.destination = 'hand';
+    effect.count = 1;
+    effect.selection = 'choose';
+    effect.shuffle = text.includes('山札を切る');
+    return effect as Effect;
   }
 
   return null;

@@ -1,4 +1,5 @@
-import { parseEffectText, EffectType } from '../effect-parser';
+import { parseEffectText } from '../effect-parser';
+import { EffectType } from './types';
 
 describe('Damage Modifier Effects', () => {
   it('should parse ignore effects modifier', async () => {
@@ -8,14 +9,21 @@ describe('Damage Modifier Effects', () => {
     const expectedEffects = [
       {
         type: EffectType.Damage,
-        target: 'opponent',
-        location: 'active',
-        modifier: {
-          type: 'ignore',
-          what: 'effects',
-          target: 'opponent',
-          location: 'active',
-        },
+        targets: [
+          {
+            type: 'pokemon',
+            player: 'opponent',
+            location: {
+              type: 'active',
+            },
+          },
+        ],
+        modifiers: [
+          {
+            type: 'ignore',
+            what: 'effects',
+          },
+        ],
       },
     ];
 
@@ -31,14 +39,21 @@ describe('Damage Modifier Effects', () => {
       {
         type: EffectType.Damage,
         value: 120,
-        target: 'opponent',
-        location: 'active',
-        modifier: {
-          type: 'ignore',
-          what: 'effects',
-          target: 'opponent',
-          location: 'active',
-        },
+        targets: [
+          {
+            type: 'pokemon',
+            player: 'opponent',
+            location: {
+              type: 'active',
+            },
+          },
+        ],
+        modifiers: [
+          {
+            type: 'ignore',
+            what: 'effects',
+          },
+        ],
       },
     ];
 

@@ -1,4 +1,5 @@
-import { parseEffectText, EffectType } from '../effect-parser';
+import { parseEffectText } from '../effect-parser';
+import { EffectType } from './types';
 
 describe('Condition Check Effects', () => {
   it('should parse prize card count condition', async () => {
@@ -7,13 +8,27 @@ describe('Condition Check Effects', () => {
     const expectedEffects = [
       {
         type: EffectType.Condition,
-        result: 'fail',
-        check: {
-          type: 'prize-count',
-          target: 'opponent',
-          values: [4, 3],
-          comparison: 'not-equal',
-        },
+        targets: [
+          {
+            type: 'pokemon',
+            player: 'opponent',
+            location: {
+              type: 'prize',
+            },
+          },
+        ],
+        conditions: [
+          {
+            type: 'card-count',
+            values: [4, 3],
+            comparison: 'not-equal',
+            onFailure: [
+              {
+                type: 'move-failure',
+              },
+            ],
+          },
+        ],
       },
     ];
 

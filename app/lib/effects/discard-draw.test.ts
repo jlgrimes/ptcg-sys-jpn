@@ -1,4 +1,5 @@
-import { parseEffectText, EffectType } from '../effect-parser';
+import { parseEffectText } from '../effect-parser';
+import { EffectType } from './types';
 
 describe('Discard Draw Effects', () => {
   it('should parse discard then draw effect', async () => {
@@ -7,15 +8,29 @@ describe('Discard Draw Effects', () => {
     const expectedEffects = [
       {
         type: EffectType.Discard,
-        target: 'self',
-        source: 'hand',
-        count: 1,
-        selection: 'choose',
+        targets: [
+          {
+            type: 'pokemon',
+            player: 'self',
+            location: {
+              type: 'discard',
+            },
+            count: 1,
+          },
+        ],
       },
       {
         type: EffectType.Draw,
-        target: 'self',
-        count: 2,
+        value: 2,
+        targets: [
+          {
+            type: 'pokemon',
+            player: 'self',
+            location: {
+              type: 'deck',
+            },
+          },
+        ],
       },
     ];
 

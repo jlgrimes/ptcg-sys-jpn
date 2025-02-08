@@ -1,4 +1,5 @@
-import { parseEffectText, EffectType } from '../effect-parser';
+import { parseEffectText } from '../effect-parser';
+import { EffectType } from './types';
 
 describe('Count-based Damage Effects', () => {
   it('should parse damage based on Pokemon count', async () => {
@@ -8,14 +9,33 @@ describe('Count-based Damage Effects', () => {
       {
         type: EffectType.Damage,
         value: 60,
-        target: 'opponent',
-        location: 'active',
-        multiplier: {
-          type: 'count',
-          target: 'opponent',
-          condition: 'ポケモンex',
-          location: 'field',
-        },
+        targets: [
+          {
+            type: 'pokemon',
+            player: 'opponent',
+            location: {
+              type: 'active',
+            },
+          },
+        ],
+        conditions: [
+          {
+            type: 'card-count',
+            target: {
+              type: 'pokemon',
+              player: 'opponent',
+              location: {
+                type: 'field',
+              },
+              filters: [
+                {
+                  type: 'card-type',
+                  value: 'ポケモンex',
+                },
+              ],
+            },
+          },
+        ],
       },
     ];
 
@@ -30,15 +50,34 @@ describe('Count-based Damage Effects', () => {
       {
         type: EffectType.Damage,
         value: 30,
-        target: 'opponent',
-        location: 'active',
-        multiplier: {
-          type: 'count',
-          target: 'opponent',
-          condition: 'トレーナーズ',
-          location: 'hand',
-        },
-        revealLocation: 'hand',
+        targets: [
+          {
+            type: 'pokemon',
+            player: 'opponent',
+            location: {
+              type: 'active',
+            },
+          },
+        ],
+        conditions: [
+          {
+            type: 'card-count',
+            target: {
+              type: 'pokemon',
+              player: 'opponent',
+              location: {
+                type: 'hand',
+                reveal: true,
+              },
+              filters: [
+                {
+                  type: 'card-type',
+                  value: 'トレーナーズ',
+                },
+              ],
+            },
+          },
+        ],
       },
     ];
 

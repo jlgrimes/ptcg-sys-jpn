@@ -1,4 +1,5 @@
-import { parseEffectText, EffectType } from '../effect-parser';
+import { parseEffectText } from '../effect-parser';
+import { EffectType } from './types';
 
 describe('Bench Damage Effects', () => {
   it('should parse single bench pokemon damage', async () => {
@@ -9,10 +10,22 @@ describe('Bench Damage Effects', () => {
       {
         type: EffectType.Damage,
         value: 30,
-        target: 'opponent',
-        location: 'bench',
-        count: 1,
-        ignoreWeaknessResistance: true,
+        targets: [
+          {
+            type: 'pokemon',
+            player: 'opponent',
+            location: {
+              type: 'bench',
+            },
+            count: 1,
+          },
+        ],
+        modifiers: [
+          {
+            type: 'ignore',
+            what: 'effects',
+          },
+        ],
       },
     ];
 
@@ -28,10 +41,22 @@ describe('Bench Damage Effects', () => {
       {
         type: EffectType.Damage,
         value: 50,
-        target: 'opponent',
-        location: 'bench',
-        count: 'all',
-        ignoreWeaknessResistance: true,
+        targets: [
+          {
+            type: 'pokemon',
+            player: 'opponent',
+            location: {
+              type: 'bench',
+            },
+            count: 'all',
+          },
+        ],
+        modifiers: [
+          {
+            type: 'ignore',
+            what: 'effects',
+          },
+        ],
       },
     ];
 

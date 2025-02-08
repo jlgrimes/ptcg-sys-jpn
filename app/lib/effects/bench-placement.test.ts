@@ -1,4 +1,5 @@
-import { parseEffectText, EffectType } from '../effect-parser';
+import { parseEffectText } from '../effect-parser';
+import { EffectType } from './types';
 
 describe('Bench Placement Effects', () => {
   it('should parse placing basic pokemon from deck', async () => {
@@ -7,14 +8,24 @@ describe('Bench Placement Effects', () => {
 
     const expectedEffects = [
       {
-        type: EffectType.Place,
-        target: 'self',
-        source: 'deck',
-        destination: 'bench',
-        count: 1,
-        selection: 'choose',
-        cardType: 'basic',
-        shuffle: true,
+        type: EffectType.Search,
+        targets: [
+          {
+            type: 'pokemon',
+            player: 'self',
+            location: {
+              type: 'bench',
+              shuffle: true,
+            },
+            count: 1,
+            filters: [
+              {
+                type: 'card-type',
+                value: 'basic',
+              },
+            ],
+          },
+        ],
       },
     ];
 
@@ -28,13 +39,22 @@ describe('Bench Placement Effects', () => {
     const expectedEffects = [
       {
         type: EffectType.Place,
-        target: 'self',
-        source: 'hand',
-        destination: 'bench',
-        count: 2,
-        selection: 'choose',
-        cardType: 'stage1',
-        shuffle: false,
+        targets: [
+          {
+            type: 'pokemon',
+            player: 'self',
+            location: {
+              type: 'bench',
+            },
+            count: 2,
+            filters: [
+              {
+                type: 'card-type',
+                value: 'stage1',
+              },
+            ],
+          },
+        ],
       },
     ];
 
@@ -48,13 +68,23 @@ describe('Bench Placement Effects', () => {
     const expectedEffects = [
       {
         type: EffectType.Place,
-        target: 'self',
-        source: 'deck',
-        destination: 'bench',
-        count: 1,
-        selection: 'random',
-        cardType: 'stage2',
-        shuffle: true,
+        targets: [
+          {
+            type: 'pokemon',
+            player: 'self',
+            location: {
+              type: 'bench',
+              shuffle: true,
+            },
+            count: 1,
+            filters: [
+              {
+                type: 'card-type',
+                value: 'stage2',
+              },
+            ],
+          },
+        ],
       },
     ];
 
@@ -68,14 +98,24 @@ describe('Bench Placement Effects', () => {
 
     const expectedEffects = [
       {
-        type: EffectType.Place,
-        target: 'opponent',
-        source: 'deck',
-        destination: 'bench',
-        count: 1,
-        selection: 'choose',
-        cardType: 'basic',
-        shuffle: true,
+        type: EffectType.Search,
+        targets: [
+          {
+            type: 'pokemon',
+            player: 'opponent',
+            location: {
+              type: 'bench',
+              shuffle: true,
+            },
+            count: 1,
+            filters: [
+              {
+                type: 'card-type',
+                value: 'basic',
+              },
+            ],
+          },
+        ],
       },
     ];
 

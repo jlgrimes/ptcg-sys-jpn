@@ -1,4 +1,5 @@
-import { parseEffectText, EffectType } from '../effect-parser';
+import { parseEffectText } from '../effect-parser';
+import { EffectType } from './types';
 
 describe('Energy Manipulation Effects', () => {
   it('should parse energy discard effect', async () => {
@@ -7,12 +8,17 @@ describe('Energy Manipulation Effects', () => {
 
     const expectedEffects = [
       {
-        type: EffectType.Energy,
-        action: 'discard',
-        target: 'self',
-        source: 'active',
-        count: 2,
-        selection: 'choose',
+        type: EffectType.Discard,
+        targets: [
+          {
+            type: 'pokemon',
+            player: 'self',
+            location: {
+              type: 'discard',
+            },
+            count: 2,
+          },
+        ],
       },
     ];
 
@@ -27,15 +33,22 @@ describe('Energy Manipulation Effects', () => {
     const expectedEffects = [
       {
         type: EffectType.Energy,
-        action: 'attach',
-        target: 'self',
-        source: 'discard',
-        destination: 'bench',
-        count: 2,
-        selection: 'choose',
-        energyType: 'basic',
-        maxCount: true,
-        targetCount: 1,
+        targets: [
+          {
+            type: 'pokemon',
+            player: 'self',
+            location: {
+              type: 'bench',
+            },
+            count: 2,
+            filters: [
+              {
+                type: 'card-type',
+                value: 'basic',
+              },
+            ],
+          },
+        ],
       },
     ];
 

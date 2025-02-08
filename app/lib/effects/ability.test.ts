@@ -1,4 +1,5 @@
-import { parseEffectText, EffectType } from '../effect-parser';
+import { parseEffectText } from '../effect-parser';
+import { EffectType } from './types';
 
 describe('Ability Effects', () => {
   it('should parse once per turn search ability', async () => {
@@ -8,11 +9,17 @@ describe('Ability Effects', () => {
     const expectedEffects = [
       {
         type: EffectType.Search,
-        target: 'self',
-        source: 'deck',
-        destination: 'hand',
-        count: 1,
-        selection: 'choose',
+        targets: [
+          {
+            type: 'pokemon',
+            player: 'self',
+            location: {
+              type: 'deck',
+              shuffle: true,
+            },
+            count: 1,
+          },
+        ],
         timing: {
           type: 'once-per-turn',
           restriction: {
@@ -20,7 +27,6 @@ describe('Ability Effects', () => {
             abilityName: 'マッハサーチ',
           },
         },
-        shuffle: true,
       },
     ];
 
@@ -34,11 +40,21 @@ describe('Ability Effects', () => {
     const expectedEffects = [
       {
         type: EffectType.Ability,
-        effect: {
-          type: 'immunity',
-          what: 'ability',
-          target: 'opponent',
-        },
+        targets: [
+          {
+            type: 'pokemon',
+            player: 'opponent',
+            location: {
+              type: 'active',
+            },
+          },
+        ],
+        modifiers: [
+          {
+            type: 'immunity',
+            what: 'ability',
+          },
+        ],
       },
     ];
 
@@ -57,13 +73,27 @@ describe('Ability Effects', () => {
           type: 'continuous',
           condition: 'active',
         },
-        effect: {
-          type: 'damage-prevention',
-          coinFlips: 1,
-          target: 'opponent',
-          what: 'damage',
-          onHeads: true,
-        },
+        targets: [
+          {
+            type: 'pokemon',
+            player: 'opponent',
+            location: {
+              type: 'active',
+            },
+          },
+        ],
+        conditions: [
+          {
+            type: 'coin-flip',
+            value: 1,
+            onSuccess: [
+              {
+                type: 'damage-prevention',
+                what: 'damage',
+              },
+            ],
+          },
+        ],
       },
     ];
 
@@ -82,12 +112,21 @@ describe('Ability Effects', () => {
           type: 'continuous',
           condition: 'active',
         },
-        effect: {
-          type: 'nullify',
-          what: 'ability',
-          target: 'opponent',
-          location: 'active',
-        },
+        targets: [
+          {
+            type: 'pokemon',
+            player: 'opponent',
+            location: {
+              type: 'active',
+            },
+          },
+        ],
+        modifiers: [
+          {
+            type: 'nullify',
+            what: 'ability',
+          },
+        ],
       },
     ];
 

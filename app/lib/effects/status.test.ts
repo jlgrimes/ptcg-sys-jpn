@@ -1,4 +1,5 @@
-import { parseEffectText, EffectType } from '../effect-parser';
+import { parseEffectText } from '../effect-parser';
+import { EffectType } from './types';
 
 describe('Status Effects', () => {
   it('should parse coin flip status effect with damage', async () => {
@@ -9,17 +10,27 @@ describe('Status Effects', () => {
       {
         type: EffectType.Damage,
         value: 60,
-        target: 'opponent',
-        location: 'active',
-        coinFlip: {
-          count: 1,
-          onHeads: {
-            type: EffectType.Status,
-            status: 'paralyzed',
-            target: 'opponent',
-            location: 'active',
+        targets: [
+          {
+            type: 'pokemon',
+            player: 'opponent',
+            location: {
+              type: 'active',
+            },
           },
-        },
+        ],
+        conditions: [
+          {
+            type: 'coin-flip',
+            value: 1,
+            onSuccess: [
+              {
+                type: EffectType.Status,
+                status: 'paralyzed',
+              },
+            ],
+          },
+        ],
       },
     ];
 

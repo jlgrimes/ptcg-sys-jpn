@@ -1,4 +1,5 @@
-import { parseEffectText, EffectType } from './effect-parser';
+import { parseEffectText } from './effect-parser';
+import { EffectType } from './effects/types';
 
 describe('Effect Parser', () => {
   it('should parse bench damage effects with special conditions', async () => {
@@ -9,10 +10,22 @@ describe('Effect Parser', () => {
       {
         type: EffectType.Damage,
         value: 30,
-        target: 'opponent',
-        location: 'bench',
-        count: 1,
-        ignoreWeaknessResistance: true,
+        targets: [
+          {
+            type: 'pokemon',
+            player: 'opponent',
+            location: {
+              type: 'bench',
+            },
+            count: 1,
+          },
+        ],
+        modifiers: [
+          {
+            type: 'ignore',
+            what: 'effects',
+          },
+        ],
       },
     ];
 
