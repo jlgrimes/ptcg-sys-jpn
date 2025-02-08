@@ -86,4 +86,32 @@ describe('Bench Damage Effects', () => {
     const effects = await parseEffectText(text);
     expect(effects).toEqual(expectedEffects);
   });
+
+  it('should parse bench damage with specific target', async () => {
+    const text =
+      '相手のポケモン1匹に、100ダメージ。［ベンチは弱点・抵抗力を計算しない。］';
+
+    const expectedEffects = [
+      {
+        type: EffectType.Damage,
+        value: 100,
+        targets: [
+          {
+            type: 'pokemon',
+            player: 'opponent',
+            count: 1,
+          },
+        ],
+        modifiers: [
+          {
+            type: 'ignore',
+            what: 'effects',
+          },
+        ],
+      },
+    ];
+
+    const effects = await parseEffectText(text);
+    expect(effects).toEqual(expectedEffects);
+  });
 });

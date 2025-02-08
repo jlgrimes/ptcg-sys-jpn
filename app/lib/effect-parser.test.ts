@@ -38,17 +38,14 @@ describe('Effect Parser', () => {
     const expectedEffects = [
       {
         type: 'damage',
-        value: 20,
         targets: [
           {
             type: 'pokemon',
             player: 'opponent',
             count: 1,
-            location: {
-              type: 'active',
-            },
           },
         ],
+        value: 20,
       },
     ];
 

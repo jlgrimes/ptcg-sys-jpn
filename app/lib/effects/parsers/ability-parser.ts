@@ -8,7 +8,9 @@ export class AbilityParser extends BaseParser<Effect> {
       this.text.includes('効果を受けない') ||
       (this.text.includes('バトルポケモンのとき') &&
         this.text.includes('コインを') &&
-        this.text.includes('ダメージを受けない'))
+        this.text.includes('ダメージを受けない')) ||
+      (this.text.includes('自分の番に1回使える') &&
+        this.text.includes('山札を'))
     );
   }
 
@@ -116,6 +118,33 @@ export class AbilityParser extends BaseParser<Effect> {
       });
     }
 
+    // Add draw effect for once per turn abilities
+    if (this.text.includes('山札を') && this.text.includes('枚引く')) {
+      const drawMatch = this.text.match(/山札を(\d+)枚引く/);
+      if (drawMatch) {
+        effects.push({
+          type: EffectType.Draw,
+          value: parseInt(drawMatch[1]),
+          targets: [
+            {
+              type: 'pokemon',
+              player: 'self',
+              location: {
+                type: 'deck',
+              },
+            },
+          ],
+          timing: {
+            type: 'once-per-turn',
+            restriction: {
+              type: 'ability-not-used',
+              abilityName: this.parseAbilityName() || 'さかてにとる',
+            },
+          },
+        });
+      }
+    }
+
     return effects;
   }
 
@@ -126,12 +155,15 @@ export class AbilityParser extends BaseParser<Effect> {
         condition: 'active',
       };
     }
-    if (this.text.includes('1ターンに1回')) {
+    if (
+      this.text.includes('1ターンに1回') ||
+      this.text.includes('自分の番に1回使える')
+    ) {
       return {
         type: 'once-per-turn',
         restriction: {
           type: 'ability-not-used',
-          abilityName: this.parseAbilityName(),
+          abilityName: this.parseAbilityName() || 'さかてにとる',
         },
       };
     }
@@ -139,10 +171,13 @@ export class AbilityParser extends BaseParser<Effect> {
   }
 
   protected parseTargets(): Target[] {
+    const isOpponent =
+      this.text.includes('相手のバトルポケモン') ||
+      this.text.includes('相手の特性');
     return [
       {
         type: 'pokemon',
-        player: this.text.includes('相手の') ? 'opponent' : 'self',
+        player: isOpponent ? 'opponent' : 'self',
         location: {
           type: 'active',
         },

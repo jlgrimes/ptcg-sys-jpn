@@ -1,15 +1,11 @@
 import { BaseParser } from './base-parser';
-import { Effect, EffectType } from '../types';
+import { Effect, EffectType, Target } from '../types';
 
 export class BenchDamageParser extends BaseParser<Effect> {
   canParse(): boolean {
-    // Only parse if it's specifically about bench damage
+    // Only parse if it's about damage
     return (
-      (this.text.includes('ベンチポケモン') ||
-        this.text.includes('ベンチの')) &&
-      this.text.includes('ダメージ') &&
-      !this.text.includes('バトルポケモン') && // Avoid matching when it's about battle pokemon
-      !this.text.includes('効果を計算しない') // Avoid matching when it's about effect calculation
+      this.text.includes('ダメージ') && !this.text.includes('効果を計算しない') // Avoid matching when it's about effect calculation
     );
   }
 
@@ -20,16 +16,25 @@ export class BenchDamageParser extends BaseParser<Effect> {
     const damageValue = this.parseDamageValue();
     if (damageValue === 0) return null;
 
+    const target: Partial<Target> = {
+      type: 'pokemon',
+      player: this.text.includes('自分の') ? 'self' : 'opponent',
+      count,
+    };
+
+    // Only add location if explicitly specified
+    if (
+      this.text.includes('ベンチポケモン') ||
+      this.text.includes('ベンチの')
+    ) {
+      target.location = { type: 'bench' };
+    } else if (this.text.includes('バトルポケモン')) {
+      target.location = { type: 'active' };
+    }
+
     return this.createEffect(EffectType.Damage, {
       value: damageValue,
-      targets: [
-        {
-          type: 'pokemon',
-          player: this.text.includes('自分の') ? 'self' : 'opponent',
-          location: { type: 'bench' },
-          count,
-        },
-      ],
+      targets: [target as Target],
       ...(this.text.includes('弱点・抵抗力を計算しない') && {
         modifiers: [{ type: 'ignore', what: 'effects' }],
       }),

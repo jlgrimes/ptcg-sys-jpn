@@ -154,4 +154,54 @@ describe('Ability Effects', () => {
     const effects = await parseEffectText(text);
     expect(effects).toEqual(expectedEffects);
   });
+
+  it('should parse draw ability with condition', async () => {
+    const text =
+      '前の相手の番に、自分のポケモンがきぜつしていたなら、自分の番に1回使える。自分の山札を3枚引く。この番、すでに別の「さかてにとる」を使っていたなら、この特性は使えない。';
+
+    const expectedEffects = [
+      {
+        type: EffectType.Ability,
+        targets: [
+          {
+            type: 'pokemon',
+            player: 'self',
+            location: {
+              type: 'active',
+            },
+          },
+        ],
+        timing: {
+          type: 'once-per-turn',
+          restriction: {
+            type: 'ability-not-used',
+            abilityName: 'さかてにとる',
+          },
+        },
+      },
+      {
+        type: EffectType.Draw,
+        value: 3,
+        targets: [
+          {
+            type: 'pokemon',
+            player: 'self',
+            location: {
+              type: 'deck',
+            },
+          },
+        ],
+        timing: {
+          type: 'once-per-turn',
+          restriction: {
+            type: 'ability-not-used',
+            abilityName: 'さかてにとる',
+          },
+        },
+      },
+    ];
+
+    const effects = await parseEffectText(text);
+    expect(effects).toEqual(expectedEffects);
+  });
 });
