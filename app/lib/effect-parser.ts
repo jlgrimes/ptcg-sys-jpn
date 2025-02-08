@@ -29,22 +29,30 @@ export async function parseEffectText(text: string): Promise<Effect[]> {
     const tokenizer = await getTokenizer();
     const effects: Effect[] = [];
 
+    // Extract ability name if present
+    const abilityNameMatch = text.match(/特性「(.+?)」/);
+    const abilityName = abilityNameMatch ? abilityNameMatch[1] : '';
+
+    // Remove ability name from text for parsing
+    const effectText = text.replace(/特性「.+?」：?/, '').trim();
+
     const phrases: TokenizedPhrase[] = [
       {
-        text: text,
-        tokens: tokenizer.tokenize(text),
+        text: effectText,
+        tokens: tokenizer.tokenize(effectText),
       },
     ];
 
     for (const phrase of phrases) {
-      const effect = parseEffect(phrase);
-      if (effect) {
-        if (Array.isArray(effect)) {
-          effects.push(...effect);
-        } else {
-          effects.push(effect);
+      const parsedEffects = parseEffect(phrase);
+      // Add ability name to timing restrictions if present
+      const processedEffects = parsedEffects.map(e => {
+        if (e.timing?.restriction?.type === 'ability-not-used' && abilityName) {
+          e.timing.restriction.abilityName = abilityName;
         }
-      }
+        return e;
+      });
+      effects.push(...processedEffects);
     }
 
     return effects;

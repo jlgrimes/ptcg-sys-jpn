@@ -4,13 +4,18 @@ import { Effect, EffectType, Timing, Target } from '../types';
 export class AbilityParser extends BaseParser<Effect> {
   canParse(): boolean {
     return (
-      this.text.includes('特性') ||
+      this.text.includes('特性「') ||
       this.text.includes('効果を受けない') ||
       (this.text.includes('バトルポケモンのとき') &&
         this.text.includes('コインを') &&
         this.text.includes('ダメージを受けない')) ||
       (this.text.includes('自分の番に1回使える') &&
-        this.text.includes('山札を'))
+        this.text.includes('山札を')) ||
+      (this.text.includes('進化させたとき') &&
+        this.text.includes('1回使える')) ||
+      this.text.includes('特性は無効') ||
+      (this.text.includes('1ターンに1回使える') &&
+        this.text.includes('山札から'))
     );
   }
 
@@ -19,6 +24,8 @@ export class AbilityParser extends BaseParser<Effect> {
 
     const effects: Effect[] = [];
     const targets = this.parseTargets();
+    const timing = this.parseTiming();
+    const abilityName = this.parseAbilityName();
 
     // Base ability effect
     const abilityEffect: Effect = {
@@ -26,10 +33,34 @@ export class AbilityParser extends BaseParser<Effect> {
       targets,
     };
 
-    // Add timing only for specific cases
-    const timing = this.parseTiming();
+    // Add timing if present
     if (timing) {
       abilityEffect.timing = timing;
+      if (timing.restriction?.type === 'ability-not-used' && abilityName) {
+        timing.restriction.abilityName = abilityName;
+      }
+    }
+
+    // Add conditions for Terastal check
+    if (this.text.includes('テラスタル」のポケモンがいるなら')) {
+      abilityEffect.conditions = [
+        {
+          type: 'card-count',
+          target: {
+            type: 'pokemon',
+            player: 'self',
+            location: {
+              type: 'field',
+            },
+            filters: [
+              {
+                type: 'card-type',
+                value: 'テラスタル',
+              },
+            ],
+          },
+        },
+      ];
     }
 
     // Add coin flip damage prevention
@@ -59,15 +90,6 @@ export class AbilityParser extends BaseParser<Effect> {
         type: 'continuous',
         condition: 'active',
       };
-      abilityEffect.targets = [
-        {
-          type: 'pokemon',
-          player: 'self',
-          location: {
-            type: 'active',
-          },
-        },
-      ];
       effects.push(abilityEffect);
       return effects;
     }
@@ -90,39 +112,54 @@ export class AbilityParser extends BaseParser<Effect> {
           what: 'ability',
         },
       ];
+      abilityEffect.timing = {
+        type: 'continuous',
+        condition: 'active',
+      };
     }
 
     effects.push(abilityEffect);
 
     // Add search effect for once per turn abilities
     if (this.text.includes('山札から') && this.text.includes('手札に加える')) {
-      effects.push({
+      const searchEffect: Effect = {
         type: EffectType.Search,
         targets: [
           {
-            type: 'pokemon',
+            type: this.text.includes('トレーナーズ') ? 'trainer' : 'pokemon',
             player: 'self',
-            count: 1,
+            count: this.parseCount(
+              this.text.includes('トレーナーズ') ? 'trainer' : 'pokemon'
+            ),
             location: {
               type: 'deck',
+              ...(this.text.includes('見せ') && { reveal: true }),
             },
+            ...(this.text.includes('トレーナーズ') && {
+              filters: [
+                {
+                  type: 'card-type',
+                  value: 'トレーナーズ',
+                },
+              ],
+            }),
           },
         ],
-        timing: {
-          type: 'once-per-turn',
-          restriction: {
-            type: 'ability-not-used',
-            abilityName: this.parseAbilityName(),
-          },
-        },
-      });
+      };
+
+      // Add timing if present
+      if (timing) {
+        searchEffect.timing = timing;
+      }
+
+      effects.push(searchEffect);
     }
 
     // Add draw effect for once per turn abilities
     if (this.text.includes('山札を') && this.text.includes('枚引く')) {
       const drawMatch = this.text.match(/山札を(\d+)枚引く/);
       if (drawMatch) {
-        effects.push({
+        const drawEffect: Effect = {
           type: EffectType.Draw,
           value: parseInt(drawMatch[1]),
           targets: [
@@ -134,15 +171,30 @@ export class AbilityParser extends BaseParser<Effect> {
               },
             },
           ],
-          timing: {
-            type: 'once-per-turn',
-            restriction: {
-              type: 'ability-not-used',
-              abilityName: this.parseAbilityName() || 'さかてにとる',
+        };
+
+        if (timing) {
+          drawEffect.timing = timing;
+        }
+
+        effects.push(drawEffect);
+      }
+    }
+
+    // Add shuffle effect if needed
+    if (this.text.includes('山札を切る')) {
+      effects.push({
+        type: EffectType.Shuffle,
+        targets: [
+          {
+            type: 'pokemon',
+            player: 'self',
+            location: {
+              type: 'deck',
             },
           },
-        });
-      }
+        ],
+      });
     }
 
     return effects;
@@ -155,6 +207,15 @@ export class AbilityParser extends BaseParser<Effect> {
         condition: 'active',
       };
     }
+    if (this.text.includes('進化させたとき')) {
+      return {
+        type: 'on-evolution',
+        restriction: {
+          type: 'ability-not-used',
+          abilityName: '',
+        },
+      };
+    }
     if (
       this.text.includes('1ターンに1回') ||
       this.text.includes('自分の番に1回使える')
@@ -163,7 +224,7 @@ export class AbilityParser extends BaseParser<Effect> {
         type: 'once-per-turn',
         restriction: {
           type: 'ability-not-used',
-          abilityName: this.parseAbilityName() || 'さかてにとる',
+          abilityName: '',
         },
       };
     }
@@ -186,7 +247,13 @@ export class AbilityParser extends BaseParser<Effect> {
   }
 
   protected parseAbilityName(): string {
-    const match = this.text.match(/「(.+?)」/);
-    return match ? match[1] : '';
+    const match = this.text.match(/特性「(.+?)」/);
+    if (match) {
+      return match[1];
+    }
+    if (this.text.includes('「さかてにとる」')) {
+      return 'さかてにとる';
+    }
+    return '';
   }
 }

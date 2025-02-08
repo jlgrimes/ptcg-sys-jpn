@@ -204,4 +204,91 @@ describe('Ability Effects', () => {
     const effects = await parseEffectText(text);
     expect(effects).toEqual(expectedEffects);
   });
+
+  it('should parse evolution-based trainer search ability', async () => {
+    const text =
+      '自分の番に、このカードを手札から出して進化させたとき、自分の場に「テラスタル」のポケモンがいるなら、1回使える。自分の山札からトレーナーズを2枚まで選び、相手に見せて、手札に加える。そして山札を切る。';
+
+    const expectedEffects = [
+      {
+        type: EffectType.Ability,
+        targets: [
+          {
+            type: 'pokemon',
+            player: 'self',
+            location: {
+              type: 'active',
+            },
+          },
+        ],
+        timing: {
+          type: 'on-evolution',
+          restriction: {
+            type: 'ability-not-used',
+            abilityName: '',
+          },
+        },
+        conditions: [
+          {
+            type: 'card-count',
+            target: {
+              type: 'pokemon',
+              player: 'self',
+              location: {
+                type: 'field',
+              },
+              filters: [
+                {
+                  type: 'card-type',
+                  value: 'テラスタル',
+                },
+              ],
+            },
+          },
+        ],
+      },
+      {
+        type: EffectType.Search,
+        targets: [
+          {
+            type: 'trainer',
+            player: 'self',
+            count: 2,
+            location: {
+              type: 'deck',
+              reveal: true,
+            },
+            filters: [
+              {
+                type: 'card-type',
+                value: 'トレーナーズ',
+              },
+            ],
+          },
+        ],
+        timing: {
+          type: 'on-evolution',
+          restriction: {
+            type: 'ability-not-used',
+            abilityName: '',
+          },
+        },
+      },
+      {
+        type: EffectType.Shuffle,
+        targets: [
+          {
+            type: 'pokemon',
+            player: 'self',
+            location: {
+              type: 'deck',
+            },
+          },
+        ],
+      },
+    ];
+
+    const effects = await parseEffectText(text);
+    expect(effects).toEqual(expectedEffects);
+  });
 });
