@@ -5,43 +5,22 @@ export class BenchPlacementParser extends BaseParser<Effect> {
   canParse(): boolean {
     return (
       this.text.includes('ベンチ') &&
-      (this.text.includes('出す') || this.text.includes('のせる'))
+      this.text.includes('出す') &&
+      (this.text.includes('山札から') || this.text.includes('手札から'))
     );
   }
 
-  parse(): Effect | Effect[] | null {
-    if (!this.canParse()) return null;
+  parse(): Effect[] {
+    if (!this.canParse()) return [];
 
+    const effects: Effect[] = [];
     const player = this.text.includes('相手の') ? 'opponent' : 'self';
     const fromDeck = this.text.includes('山札から');
-    const shuffle = this.text.includes('切る');
     const filters = this.parseFilters();
     const count = this.parseCount('pokemon');
 
-    const effects: Effect[] = [];
-
-    // Create the search effect first if searching from deck
-    if (fromDeck) {
-      const searchEffect: Effect = {
-        type: EffectType.Search,
-        targets: [
-          {
-            type: 'pokemon',
-            player,
-            location: {
-              type: 'deck',
-              ...(shuffle && { shuffle: true }),
-            },
-            count,
-            ...(filters && { filters }),
-          },
-        ],
-      };
-      effects.push(searchEffect);
-    }
-
-    // Then create the place effect
-    const placeEffect: Effect = {
+    // Always create the place effect
+    effects.push({
       type: EffectType.Place,
       targets: [
         {
@@ -54,11 +33,28 @@ export class BenchPlacementParser extends BaseParser<Effect> {
           ...(filters && { filters }),
         },
       ],
-    };
-    effects.push(placeEffect);
+    });
 
-    // Return single effect if not from deck, otherwise return array
-    return fromDeck ? effects : placeEffect;
+    // Add search effect if from deck
+    if (fromDeck) {
+      effects.push({
+        type: EffectType.Search,
+        targets: [
+          {
+            type: 'pokemon',
+            player,
+            location: {
+              type: 'deck',
+              shuffle: this.text.includes('切る'),
+            },
+            count,
+            ...(filters && { filters }),
+          },
+        ],
+      });
+    }
+
+    return effects;
   }
 
   protected parseFilters(): Filter[] | undefined {

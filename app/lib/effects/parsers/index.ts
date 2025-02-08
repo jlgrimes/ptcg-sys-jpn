@@ -18,54 +18,48 @@ import { ParserError } from './parser-error';
 import { Logger } from '../../utils/logger';
 
 interface ParserConstructor {
-  new (phrase: TokenizedPhrase): BaseParser;
+  new (phrase: TokenizedPhrase): BaseParser<Effect>;
 }
 
 class ParserRegistry {
-  private parsers: Array<(phrase: TokenizedPhrase) => BaseParser> = [];
+  private parsers: Array<{
+    parser: (phrase: TokenizedPhrase) => BaseParser<Effect>;
+    priority: number;
+  }> = [];
   private logger = Logger.getInstance();
 
-  register(ParserClass: ParserConstructor): void {
-    this.parsers.push(phrase => new ParserClass(phrase));
-    this.logger.debug(`Registered parser: ${ParserClass.name}`);
+  register(ParserClass: ParserConstructor, priority: number): void {
+    this.parsers.push({
+      parser: phrase => new ParserClass(phrase),
+      priority,
+    });
+    this.logger.debug(
+      `Registered parser: ${ParserClass.name} with priority ${priority}`
+    );
   }
 
   parseEffect(phrase: TokenizedPhrase): Effect[] {
-    const effects: Effect[] = [];
-    const parsedEffects = new Set<string>();
+    // Sort parsers by priority (higher priority first)
+    const sortedParsers = [...this.parsers].sort(
+      (a, b) => b.priority - a.priority
+    );
 
-    for (const createParser of this.parsers) {
+    for (const { parser } of sortedParsers) {
       try {
-        const parser = createParser(phrase);
-        if (parser.canParse()) {
-          this.logger.debug(`Parsing with ${parser.constructor.name}`, {
+        const instance = parser(phrase);
+        if (instance.canParse()) {
+          this.logger.debug(`Parsing with ${instance.constructor.name}`, {
             text: phrase.text,
           });
 
-          const effect = parser.parse();
+          const effect = instance.parse();
           if (effect) {
-            const effectsToAdd = Array.isArray(effect) ? effect : [effect];
-            for (const e of effectsToAdd) {
-              // Create a key that uniquely identifies this effect
-              const key = this.createEffectKey(e);
-              if (!parsedEffects.has(key)) {
-                effects.push(e);
-                parsedEffects.add(key);
-                this.logger.debug(
-                  `Parser ${parser.constructor.name} added effect`,
-                  { key }
-                );
-              } else {
-                this.logger.debug(
-                  `Parser ${parser.constructor.name} skipped duplicate effect`,
-                  { key }
-                );
-              }
-            }
-          } else {
+            const effects = Array.isArray(effect) ? effect : [effect];
             this.logger.debug(
-              `Parser ${parser.constructor.name} returned no effects`
+              `Parser ${instance.constructor.name} added effects`,
+              { count: effects.length }
             );
+            return effects;
           }
         }
       } catch (error) {
@@ -90,51 +84,26 @@ class ParserRegistry {
       }
     }
 
-    return effects;
-  }
-
-  private createEffectKey(effect: Effect): string {
-    // Create a unique key based on the effect's properties
-    const parts: string[] = [effect.type];
-
-    if (effect.value !== undefined) {
-      parts.push(`value:${effect.value}`);
-    }
-
-    if (effect.targets) {
-      for (const target of effect.targets) {
-        parts.push(
-          `target:${target.type}:${target.player}:${target.location.type}`
-        );
-      }
-    }
-
-    if (effect.modifiers) {
-      for (const modifier of effect.modifiers) {
-        parts.push(`modifier:${modifier.type}:${modifier.what}`);
-      }
-    }
-
-    return parts.join('|');
+    return [];
   }
 }
 
 const registry = new ParserRegistry();
 
-// Register all parsers
-registry.register(AbilityParser);
-registry.register(BenchDamageParser);
-registry.register(CountDamageParser);
-registry.register(DamageModifierParser);
-registry.register(DamageParser);
-registry.register(DiscardParser);
-registry.register(DrawParser);
-registry.register(EnergyParser);
-registry.register(PlaceParser);
-registry.register(SearchParser);
-registry.register(StatusParser);
-registry.register(ConditionParser);
-registry.register(MoveRestrictionParser);
+// Register parsers in priority order (most specific first)
+registry.register(AbilityParser, 1000); // Abilities are most specific
+registry.register(MoveRestrictionParser, 900);
+registry.register(CountDamageParser, 800);
+registry.register(BenchDamageParser, 700);
+registry.register(DamageModifierParser, 600);
+registry.register(StatusParser, 500);
+registry.register(EnergyParser, 400);
+registry.register(PlaceParser, 200);
+registry.register(SearchParser, 100);
+registry.register(DiscardParser, 50);
+registry.register(DrawParser, 40);
+registry.register(ConditionParser, 30);
+registry.register(DamageParser, 10); // Most generic damage parser last
 
 export function parseEffect(phrase: TokenizedPhrase): Effect[] {
   return registry.parseEffect(phrase);

@@ -15,36 +15,16 @@ export class BenchDamageParser extends BaseParser<Effect> {
   parse(): Effect | null {
     if (!this.canParse()) return null;
 
-    const effect: Partial<Effect> = {
-      type: EffectType.Damage,
+    return this.createEffect(EffectType.Damage, {
       value: this.parseDamageValue(),
       targets: [
         {
           type: 'pokemon',
-          player: this.text.includes('相手の') ? 'opponent' : 'self',
-          location: {
-            type: 'bench',
-          },
+          player: this.parsePlayer(),
+          location: { type: 'bench' },
           count: this.text.includes('全員') ? 'all' : 1,
         },
       ],
-    };
-
-    // Only add modifiers if explicitly mentioned
-    if (this.text.includes('弱点・抵抗力を計算しない')) {
-      effect.modifiers = [
-        {
-          type: 'ignore',
-          what: 'effects',
-        },
-      ];
-    }
-
-    return effect as Effect;
-  }
-
-  private parseDamageValue(): number {
-    const match = this.text.match(/(\d+)ダメージ/);
-    return match ? parseInt(match[1]) : 0;
+    });
   }
 }

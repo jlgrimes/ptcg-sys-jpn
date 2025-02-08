@@ -9,32 +9,11 @@ export class DamageParser extends BaseParser<Effect> {
   parse(): Effect | null {
     if (!this.canParse()) return null;
 
-    const effect: Partial<Effect> = {
-      type: EffectType.Damage,
-      value: this.parseDamageValue(),
-      targets: [
-        {
-          type: 'pokemon',
-          player: 'opponent',
-          location: {
-            type: this.text.includes('ベンチ') ? 'bench' : 'active',
-          },
-          count: this.parseCount('pokemon'),
-        },
-      ],
-    };
+    const damageValue = this.parseDamageValue();
+    if (damageValue === 0) return null;
 
-    const modifiers = this.parseModifiers();
-    if (modifiers) effect.modifiers = modifiers;
-
-    const conditions = this.parseConditions();
-    if (conditions) effect.conditions = conditions;
-
-    return effect as Effect;
-  }
-
-  private parseDamageValue(): number {
-    const match = this.text.match(/(\d+)ダメージ/);
-    return match ? parseInt(match[1]) : 0;
+    return this.createEffect(EffectType.Damage, {
+      value: damageValue,
+    });
   }
 }

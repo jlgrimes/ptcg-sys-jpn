@@ -6,6 +6,7 @@ import {
   Filter,
   Condition,
   Modifier,
+  EffectType,
 } from '../types';
 import * as kuromoji from 'kuromoji';
 
@@ -104,17 +105,33 @@ export abstract class BaseParser<T extends Effect = Effect> {
     return tokens.map(t => t.surface_form).join(separator);
   }
 
+  // Enhanced common parsing methods
+  protected createEffect(
+    type: EffectType,
+    options: Partial<Effect> = {}
+  ): Effect {
+    return {
+      type,
+      ...options,
+      targets: options.targets || this.parseTargets(),
+      ...(this.parseConditions() && { conditions: this.parseConditions() }),
+      ...(this.parseModifiers() && { modifiers: this.parseModifiers() }),
+      ...(this.parseTiming() && { timing: this.parseTiming() }),
+    } as Effect;
+  }
+
   protected parseTargets(): Target[] | undefined {
     const targets: Target[] = [];
+    const targetTypes = this.getTargetTypes();
 
-    if (this.text.includes('ポケモン')) {
+    for (const targetType of targetTypes) {
       const target: Partial<Target> = {
-        type: 'pokemon',
-        player: this.text.includes('相手') ? 'opponent' : 'self',
+        type: targetType,
+        player: this.parsePlayer(),
         location: this.parseLocation(),
       };
 
-      const count = this.parseCountWithAll();
+      const count = this.parseCountWithAll(targetType);
       if (count) target.count = count;
 
       const filters = this.parseFilters();
@@ -126,17 +143,21 @@ export abstract class BaseParser<T extends Effect = Effect> {
     return targets.length > 0 ? targets : undefined;
   }
 
+  protected getTargetTypes(): ('pokemon' | 'energy' | 'trainer')[] {
+    const types: ('pokemon' | 'energy' | 'trainer')[] = [];
+    if (this.text.includes('ポケモン')) types.push('pokemon');
+    if (this.text.includes('エネルギー')) types.push('energy');
+    if (this.text.includes('トレーナーズ')) types.push('trainer');
+    return types;
+  }
+
+  protected parsePlayer(): 'self' | 'opponent' {
+    return this.text.includes('相手') ? 'opponent' : 'self';
+  }
+
   protected parseLocation(): Location {
     const location: Partial<Location> = {
-      type: this.text.includes('ベンチ')
-        ? 'bench'
-        : this.text.includes('手札')
-        ? 'hand'
-        : this.text.includes('山札')
-        ? 'deck'
-        : this.text.includes('トラッシュ')
-        ? 'discard'
-        : 'active',
+      type: this.getLocationType(),
     };
 
     if (this.text.includes('見る')) location.reveal = true;
@@ -145,27 +166,31 @@ export abstract class BaseParser<T extends Effect = Effect> {
     return location as Location;
   }
 
-  protected parseCount(type: 'card' | 'energy' | 'pokemon' = 'card'): number {
-    if (type === 'energy') {
-      const energyMatch = this.text.match(/エネルギーを(\d+)個/);
-      if (energyMatch) {
-        return parseInt(energyMatch[1]);
-      }
-    }
+  protected getLocationType(): Location['type'] {
+    if (this.text.includes('ベンチ')) return 'bench';
+    if (this.text.includes('手札')) return 'hand';
+    if (this.text.includes('山札')) return 'deck';
+    if (this.text.includes('トラッシュ')) return 'discard';
+    if (this.text.includes('サイド')) return 'prize';
+    return 'active';
+  }
 
-    if (type === 'pokemon') {
-      const pokemonMatch = this.text.match(/(\d+)匹/);
-      if (pokemonMatch) {
-        return parseInt(pokemonMatch[1]);
-      }
-    }
+  protected parseCount(
+    type: 'card' | 'energy' | 'pokemon' | 'trainer' = 'card'
+  ): number {
+    const patterns = {
+      energy: /エネルギーを(\d+)個/,
+      pokemon: /(\d+)匹/,
+      trainer: /(\d+)枚/,
+      card: /(\d+)枚/,
+    };
 
-    const cardMatch = this.text.match(/(\d+)枚/);
-    return cardMatch ? parseInt(cardMatch[1]) : 1;
+    const match = this.text.match(patterns[type]);
+    return match ? parseInt(match[1]) : 1;
   }
 
   protected parseCountWithAll(
-    type: 'card' | 'energy' | 'pokemon' = 'card'
+    type: 'card' | 'energy' | 'pokemon' | 'trainer' = 'card'
   ): number | 'all' {
     if (this.text.includes('全員') || this.text.includes('すべて')) {
       return 'all';
@@ -175,9 +200,19 @@ export abstract class BaseParser<T extends Effect = Effect> {
 
   protected parseFilters(): Filter[] | undefined {
     const filters: Filter[] = [];
+    const cardTypeMap: Record<string, string> = {
+      たねポケモン: 'basic',
+      '1進化': 'stage1',
+      '2進化': 'stage2',
+      ポケモンex: 'ポケモンex',
+      トレーナーズ: 'トレーナーズ',
+      基本エネルギー: 'basic',
+    };
 
-    if (this.text.includes('たねポケモン')) {
-      filters.push({ type: 'card-type', value: 'basic' });
+    for (const [text, value] of Object.entries(cardTypeMap)) {
+      if (this.text.includes(text)) {
+        filters.push({ type: 'card-type', value });
+      }
     }
 
     return filters.length > 0 ? filters : undefined;
@@ -186,29 +221,88 @@ export abstract class BaseParser<T extends Effect = Effect> {
   protected parseConditions(): Condition[] | undefined {
     const conditions: Condition[] = [];
 
+    // Coin flip conditions
     if (this.text.includes('コインを')) {
       const match = this.text.match(/コインを(\d+)回投げ/);
       if (match) {
-        conditions.push({
+        const condition: Condition = {
           type: 'coin-flip',
           value: parseInt(match[1]),
-        });
+        };
+
+        // Add success/failure effects
+        if (this.text.includes('「おもて」なら')) {
+          condition.onSuccess = this.parseConditionEffects();
+        }
+        if (this.text.includes('「うら」なら')) {
+          condition.onFailure = this.parseConditionEffects();
+        }
+
+        conditions.push(condition);
       }
     }
 
     return conditions.length > 0 ? conditions : undefined;
   }
 
+  protected parseConditionEffects(): Effect[] | undefined {
+    const effects: Effect[] = [];
+
+    if (this.text.includes('ダメージを受けない')) {
+      effects.push({
+        type: EffectType.Status,
+        modifiers: [{ type: 'prevent', what: 'damage' }],
+      });
+    }
+
+    return effects.length > 0 ? effects : undefined;
+  }
+
   protected parseModifiers(): Modifier[] | undefined {
     const modifiers: Modifier[] = [];
 
     if (this.text.includes('計算しない')) {
-      modifiers.push({
-        type: 'ignore',
-        what: 'effects',
-      });
+      modifiers.push({ type: 'ignore', what: 'effects' });
+    }
+    if (this.text.includes('効果を受けない')) {
+      modifiers.push({ type: 'immunity', what: 'ability' });
+    }
+    if (this.text.includes('特性は無効')) {
+      modifiers.push({ type: 'nullify', what: 'ability' });
     }
 
     return modifiers.length > 0 ? modifiers : undefined;
+  }
+
+  protected parseTiming(): Effect['timing'] | undefined {
+    if (this.text.includes('1ターンに1回')) {
+      const abilityName = this.parseAbilityName();
+      return {
+        type: 'once-per-turn',
+        restriction: {
+          type: 'ability-not-used',
+          abilityName,
+        },
+      };
+    }
+
+    if (this.text.includes('バトルポケモンのとき')) {
+      return {
+        type: 'continuous',
+        condition: 'active',
+      };
+    }
+
+    return undefined;
+  }
+
+  protected parseAbilityName(): string {
+    const match = this.text.match(/特性「([^」]+)」/);
+    return match ? match[1] : '';
+  }
+
+  protected parseDamageValue(): number {
+    const match = this.text.match(/(\d+)ダメージ/);
+    return match ? parseInt(match[1]) : 0;
   }
 }

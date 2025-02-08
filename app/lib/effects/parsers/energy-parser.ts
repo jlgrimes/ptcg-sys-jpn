@@ -9,23 +9,23 @@ export class EnergyParser extends BaseParser<Effect> {
     );
   }
 
-  parse(): Effect | Effect[] | null {
-    if (!this.canParse()) return null;
+  parse(): Effect[] {
+    if (!this.canParse()) return [];
 
-    const fromDiscard = this.text.includes('トラッシュから');
-    const toDiscard = this.text.includes('トラッシュする');
+    const effects: Effect[] = [];
     const player = this.text.includes('相手の') ? 'opponent' : 'self';
     const count = this.parseCount('energy');
     const filters = this.text.includes('基本エネルギー')
       ? [{ type: 'card-type' as const, value: 'basic' }]
       : undefined;
 
-    if (toDiscard) {
-      return {
+    if (this.text.includes('トラッシュする')) {
+      // Handle discard effect
+      effects.push({
         type: EffectType.Discard,
         targets: [
           {
-            type: 'pokemon',
+            type: 'energy',
             player,
             location: {
               type: 'discard',
@@ -33,13 +33,12 @@ export class EnergyParser extends BaseParser<Effect> {
             count,
           },
         ],
-      };
-    }
-
-    if (fromDiscard) {
-      // For attaching from discard, we need to first search the discard pile
-      return [
-        {
+      });
+    } else {
+      // Handle attach effect
+      if (this.text.includes('トラッシュから')) {
+        // If attaching from discard, add search effect first
+        effects.push({
           type: EffectType.Search,
           targets: [
             {
@@ -49,39 +48,28 @@ export class EnergyParser extends BaseParser<Effect> {
                 type: 'discard',
               },
               count,
-              filters,
+              ...(filters && { filters }),
             },
           ],
-        },
-        {
-          type: EffectType.Energy,
-          targets: [
-            {
-              type: 'pokemon',
-              player,
-              location: {
-                type: this.text.includes('ベンチ') ? 'bench' : 'active',
-              },
-              count,
+        });
+      }
+
+      // Add energy attach effect
+      effects.push({
+        type: EffectType.Energy,
+        targets: [
+          {
+            type: 'pokemon',
+            player,
+            location: {
+              type: this.text.includes('ベンチ') ? 'bench' : 'active',
             },
-          ],
-        },
-      ];
+            count: 1,
+          },
+        ],
+      });
     }
 
-    return {
-      type: EffectType.Energy,
-      targets: [
-        {
-          type: 'pokemon',
-          player,
-          location: {
-            type: this.text.includes('ベンチ') ? 'bench' : 'active',
-          },
-          count,
-          filters,
-        },
-      ],
-    };
+    return effects;
   }
 }

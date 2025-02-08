@@ -1,5 +1,5 @@
 import { BaseParser } from './base-parser';
-import { Effect, EffectType } from '../types';
+import { Effect, EffectType, Filter } from '../types';
 
 export class CountDamageParser extends BaseParser<Effect> {
   canParse(): boolean {
@@ -15,9 +15,11 @@ export class CountDamageParser extends BaseParser<Effect> {
   parse(): Effect | null {
     if (!this.canParse()) return null;
 
-    const effect: Partial<Effect> = {
-      type: EffectType.Damage,
-      value: this.parseDamageValue(),
+    const damageValue = this.parseDamageValue();
+    if (damageValue === 0) return null;
+
+    return this.createEffect(EffectType.Damage, {
+      value: damageValue,
       targets: [
         {
           type: 'pokemon',
@@ -25,40 +27,34 @@ export class CountDamageParser extends BaseParser<Effect> {
           location: {
             type: 'active',
           },
+          count: 1,
         },
       ],
       conditions: [
         {
           type: 'card-count',
           target: {
-            type: 'pokemon',
+            type: this.text.includes('トレーナーズ') ? 'trainer' : 'pokemon',
             player: 'opponent',
             location: {
               type: this.text.includes('手札') ? 'hand' : 'field',
               ...(this.text.includes('見る') && { reveal: true }),
             },
-            filters: [
-              {
-                type: 'card-type',
-                value: this.parseCardType(),
-              },
-            ],
+            filters: this.parseCardTypeFilters(),
           },
         },
       ],
-    };
-
-    return effect as Effect;
+    });
   }
 
-  private parseDamageValue(): number {
-    const match = this.text.match(/×(\d+)ダメージ/);
-    return match ? parseInt(match[1]) : 0;
-  }
-
-  private parseCardType(): string {
-    if (this.text.includes('ポケモンex')) return 'ポケモンex';
-    if (this.text.includes('トレーナーズ')) return 'トレーナーズ';
-    return '';
+  private parseCardTypeFilters(): Filter[] | undefined {
+    const filters: Filter[] = [];
+    if (this.text.includes('ポケモンex')) {
+      filters.push({ type: 'card-type' as const, value: 'ポケモンex' });
+    }
+    if (this.text.includes('トレーナーズ')) {
+      filters.push({ type: 'card-type' as const, value: 'トレーナーズ' });
+    }
+    return filters.length > 0 ? filters : undefined;
   }
 }
