@@ -1,5 +1,5 @@
 import * as kuromoji from 'kuromoji';
-import { Effect } from './effects/types';
+import { Effect, EffectType, Timing } from './effects/types';
 import { parseEffect } from './effects/parsers';
 
 export interface TokenizedPhrase {
@@ -12,6 +12,26 @@ export class EffectParseError extends Error {
     super(message);
     this.name = 'EffectParseError';
   }
+}
+
+function parseTiming(text: string): Timing | undefined {
+  if (text.includes('バトルポケモンのとき')) {
+    return {
+      type: 'continuous',
+      condition: 'active',
+    };
+  }
+  if (text.includes('進化させたとき')) {
+    return {
+      type: 'on-evolution',
+    };
+  }
+  if (text.includes('1ターンに1回') || text.includes('自分の番に1回使える')) {
+    return {
+      type: 'once-per-turn',
+    };
+  }
+  return undefined;
 }
 
 /**
@@ -29,31 +49,44 @@ export async function parseEffectText(text: string): Promise<Effect[]> {
     const tokenizer = await getTokenizer();
     const effects: Effect[] = [];
 
-    // Extract ability name if present
-    const abilityNameMatch = text.match(/特性「(.+?)」/);
-    const abilityName = abilityNameMatch ? abilityNameMatch[1] : '';
+    // Check if this is an ability
+    const isAbility = text.includes('特性「');
+    const timing = parseTiming(text);
 
-    // Remove ability name from text for parsing
-    const effectText = text.replace(/特性「.+?」：?/, '').trim();
+    // Parse the effects
+    const effectText = isAbility
+      ? text.replace(/特性「.+?」：?/, '').trim()
+      : text;
+    const parsedEffects = parseEffect({
+      text: effectText,
+      tokens: tokenizer.tokenize(effectText),
+    });
 
-    const phrases: TokenizedPhrase[] = [
-      {
-        text: effectText,
-        tokens: tokenizer.tokenize(effectText),
-      },
-    ];
-
-    for (const phrase of phrases) {
-      const parsedEffects = parseEffect(phrase);
-      // Add ability name to timing restrictions if present
-      const processedEffects = parsedEffects.map(e => {
-        if (e.timing?.restriction?.type === 'ability-not-used' && abilityName) {
-          e.timing.restriction.abilityName = abilityName;
-        }
-        return e;
+    // If this is an ability, add the ability effect first
+    if (isAbility) {
+      effects.push({
+        type: EffectType.Ability,
+        targets: [
+          {
+            type: 'pokemon',
+            player: 'self',
+            location: {
+              type: 'active',
+            },
+          },
+        ],
+        timing,
+        ...(text.includes('効果を受けない') && {
+          modifiers: [{ type: 'immunity', what: 'ability' }],
+        }),
+        ...(text.includes('特性は無効') && {
+          modifiers: [{ type: 'nullify', what: 'ability' }],
+        }),
       });
-      effects.push(...processedEffects);
     }
+
+    // Add the parsed effects
+    effects.push(...parsedEffects);
 
     return effects;
   } catch (error: unknown) {

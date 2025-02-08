@@ -1,7 +1,6 @@
 import { TokenizedPhrase } from '../../effect-parser';
 import { Effect } from '../types';
 import { BaseParser } from './base-parser';
-import { AbilityParser } from './ability-parser';
 import { BenchDamageParser } from './bench-damage-parser';
 import { CountDamageParser } from './count-damage-parser';
 import { DamageModifierParser } from './damage-modifier-parser';
@@ -92,7 +91,6 @@ class ParserRegistry {
 const registry = new ParserRegistry();
 
 // Register parsers in priority order (most specific first)
-registry.register(AbilityParser, 1000); // Abilities are most specific
 registry.register(MoveRestrictionParser, 900);
 registry.register(CountDamageParser, 800);
 registry.register(BenchDamageParser, 700);

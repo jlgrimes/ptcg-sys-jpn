@@ -291,4 +291,55 @@ describe('Ability Effects', () => {
     const effects = await parseEffectText(text);
     expect(effects).toEqual(expectedEffects);
   });
+
+  it('should parse Mew ex Restart ability', async () => {
+    const text =
+      '特性「リスタート」：自分の番に1回使える。自分の手札が3枚になるように、山札を引く。';
+    const expectedEffects = [
+      {
+        type: EffectType.Ability,
+        targets: [
+          {
+            type: 'pokemon',
+            player: 'self',
+            location: {
+              type: 'active',
+            },
+          },
+        ],
+        timing: {
+          type: 'once-per-turn',
+        },
+      },
+      {
+        type: EffectType.Draw,
+        targets: [
+          {
+            type: 'pokemon',
+            player: 'self',
+            location: {
+              type: 'deck',
+            },
+          },
+        ],
+        conditions: [
+          {
+            type: 'card-count',
+            target: {
+              type: 'pokemon',
+              player: 'self',
+              location: {
+                type: 'hand',
+              },
+            },
+            value: 3,
+            comparison: 'equal',
+          },
+        ],
+      },
+    ];
+
+    const effects = await parseEffectText(text);
+    expect(effects).toEqual(expectedEffects);
+  });
 });
