@@ -10,6 +10,7 @@ export enum EffectType {
   Restriction = 'restriction',
   Condition = 'condition',
   MoveFailure = 'move-failure',
+  Shuffle = 'shuffle',
 }
 
 // Core types

@@ -33,9 +33,20 @@ describe('Bench Placement Effects', () => {
             player: 'self',
             location: {
               type: 'deck',
-              shuffle: true,
             },
             count: 1,
+          },
+        ],
+      },
+      {
+        type: EffectType.Shuffle,
+        targets: [
+          {
+            type: 'pokemon',
+            player: 'self',
+            location: {
+              type: 'deck',
+            },
           },
         ],
       },
@@ -105,9 +116,20 @@ describe('Bench Placement Effects', () => {
             player: 'self',
             location: {
               type: 'deck',
-              shuffle: true,
             },
             count: 1,
+          },
+        ],
+      },
+      {
+        type: EffectType.Shuffle,
+        targets: [
+          {
+            type: 'pokemon',
+            player: 'self',
+            location: {
+              type: 'deck',
+            },
           },
         ],
       },
@@ -149,9 +171,20 @@ describe('Bench Placement Effects', () => {
             player: 'opponent',
             location: {
               type: 'deck',
-              shuffle: true,
             },
             count: 1,
+          },
+        ],
+      },
+      {
+        type: EffectType.Shuffle,
+        targets: [
+          {
+            type: 'pokemon',
+            player: 'opponent',
+            location: {
+              type: 'deck',
+            },
           },
         ],
       },

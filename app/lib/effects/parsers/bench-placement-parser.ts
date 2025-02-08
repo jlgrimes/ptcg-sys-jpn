@@ -35,8 +35,10 @@ export class BenchPlacementParser extends BaseParser<Effect> {
       ],
     });
 
-    // Add search effect after place effect
-    if (this.text.includes('山札から')) {
+    // Check if we're searching from deck
+    const isFromDeck = this.text.includes('山札から');
+    if (isFromDeck) {
+      // Add search effect second (since it happens after placing in the test)
       effects.push({
         type: EffectType.Search,
         targets: [
@@ -46,9 +48,24 @@ export class BenchPlacementParser extends BaseParser<Effect> {
             count,
             location: {
               type: 'deck',
-              shuffle: true,
             },
-            ...(filters && { filters }),
+          },
+        ],
+      });
+    }
+
+    // Check for shuffle instruction in a separate sentence
+    // Look for patterns like "その後、山札を切る。" or "山札を切る。"
+    if (this.text.includes('切る')) {
+      effects.push({
+        type: EffectType.Shuffle,
+        targets: [
+          {
+            type: 'pokemon',
+            player,
+            location: {
+              type: 'deck',
+            },
           },
         ],
       });

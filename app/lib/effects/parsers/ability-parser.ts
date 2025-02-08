@@ -3,25 +3,36 @@ import { Effect, EffectType, Timing, Target } from '../types';
 
 export class AbilityParser extends BaseParser<Effect> {
   canParse(): boolean {
-    return this.text.includes('特性') || this.text.includes('効果を受けない');
+    return (
+      this.text.includes('特性') ||
+      this.text.includes('効果を受けない') ||
+      (this.text.includes('バトルポケモンのとき') &&
+        this.text.includes('コインを') &&
+        this.text.includes('ダメージを受けない'))
+    );
   }
 
   parse(): Effect[] {
     if (!this.canParse()) return [];
 
     const effects: Effect[] = [];
-    const timing = this.parseTiming();
     const targets = this.parseTargets();
 
     // Base ability effect
     const abilityEffect: Effect = {
       type: EffectType.Ability,
       targets,
-      timing,
     };
+
+    // Add timing only for specific cases
+    const timing = this.parseTiming();
+    if (timing) {
+      abilityEffect.timing = timing;
+    }
 
     // Add coin flip damage prevention
     if (
+      this.text.includes('バトルポケモンのとき') &&
       this.text.includes('コインを') &&
       this.text.includes('ダメージを受けない')
     ) {
@@ -42,6 +53,21 @@ export class AbilityParser extends BaseParser<Effect> {
           ],
         },
       ];
+      abilityEffect.timing = {
+        type: 'continuous',
+        condition: 'active',
+      };
+      abilityEffect.targets = [
+        {
+          type: 'pokemon',
+          player: 'self',
+          location: {
+            type: 'active',
+          },
+        },
+      ];
+      effects.push(abilityEffect);
+      return effects;
     }
 
     // Add ability immunity
@@ -55,7 +81,7 @@ export class AbilityParser extends BaseParser<Effect> {
     }
 
     // Add ability nullification
-    if (this.text.includes('特性を無効')) {
+    if (this.text.includes('特性は無効')) {
       abilityEffect.modifiers = [
         {
           type: 'nullify',
@@ -93,7 +119,7 @@ export class AbilityParser extends BaseParser<Effect> {
     return effects;
   }
 
-  protected parseTiming(): Timing {
+  protected parseTiming(): Timing | undefined {
     if (this.text.includes('バトルポケモンのとき')) {
       return {
         type: 'continuous',
@@ -109,9 +135,7 @@ export class AbilityParser extends BaseParser<Effect> {
         },
       };
     }
-    return {
-      type: 'continuous',
-    };
+    return undefined;
   }
 
   protected parseTargets(): Target[] {

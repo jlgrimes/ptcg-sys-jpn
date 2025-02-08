@@ -14,6 +14,7 @@ import { SearchParser } from './search-parser';
 import { StatusParser } from './status-parser';
 import { ConditionParser } from './condition-parser';
 import { MoveRestrictionParser } from './move-restriction-parser';
+import { BenchPlacementParser } from './bench-placement-parser';
 import { ParserError } from './parser-error';
 import { Logger } from '../../utils/logger';
 
@@ -98,6 +99,7 @@ registry.register(BenchDamageParser, 700);
 registry.register(DamageModifierParser, 600);
 registry.register(StatusParser, 500);
 registry.register(EnergyParser, 400);
+registry.register(BenchPlacementParser, 300); // Add before generic place/search
 registry.register(PlaceParser, 200);
 registry.register(SearchParser, 100);
 registry.register(DiscardParser, 50);
