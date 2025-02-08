@@ -1,31 +1,26 @@
 import { BaseParser } from './base-parser';
-import { Effect, EffectType } from '../types';
+import { Effect, EffectType, Timing, Target } from '../types';
 
 export class AbilityParser extends BaseParser<Effect> {
   canParse(): boolean {
-    return this.text.includes('特性');
+    return this.text.includes('特性') || this.text.includes('効果を受けない');
   }
 
   parse(): Effect[] {
     if (!this.canParse()) return [];
 
     const effects: Effect[] = [];
-    const player = this.text.includes('相手の') ? 'opponent' : 'self';
+    const timing = this.parseTiming();
+    const targets = this.parseTargets();
 
-    const abilityEffect = this.createEffect(EffectType.Ability, {
-      targets: [
-        {
-          type: 'pokemon',
-          player,
-          location: { type: 'active' },
-        },
-      ],
-      timing: {
-        type: 'continuous',
-        condition: 'active',
-      },
-    });
+    // Base ability effect
+    const abilityEffect: Effect = {
+      type: EffectType.Ability,
+      targets,
+      timing,
+    };
 
+    // Add coin flip damage prevention
     if (
       this.text.includes('コインを') &&
       this.text.includes('ダメージを受けない')
@@ -49,6 +44,7 @@ export class AbilityParser extends BaseParser<Effect> {
       ];
     }
 
+    // Add ability immunity
     if (this.text.includes('効果を受けない')) {
       abilityEffect.modifiers = [
         {
@@ -58,31 +54,80 @@ export class AbilityParser extends BaseParser<Effect> {
       ];
     }
 
+    // Add ability nullification
+    if (this.text.includes('特性を無効')) {
+      abilityEffect.modifiers = [
+        {
+          type: 'nullify',
+          what: 'ability',
+        },
+      ];
+    }
+
     effects.push(abilityEffect);
 
-    // Parse search effect if present
+    // Add search effect for once per turn abilities
     if (this.text.includes('山札から') && this.text.includes('手札に加える')) {
-      effects.push(
-        this.createEffect(EffectType.Search, {
-          targets: [
-            {
-              type: 'pokemon',
-              player: 'self',
-              location: { type: 'deck' },
-              count: 1,
-            },
-          ],
-          timing: {
-            type: 'once-per-turn',
-            restriction: {
-              type: 'ability-not-used',
-              abilityName: this.parseAbilityName(),
+      effects.push({
+        type: EffectType.Search,
+        targets: [
+          {
+            type: 'pokemon',
+            player: 'self',
+            count: 1,
+            location: {
+              type: 'deck',
             },
           },
-        })
-      );
+        ],
+        timing: {
+          type: 'once-per-turn',
+          restriction: {
+            type: 'ability-not-used',
+            abilityName: this.parseAbilityName(),
+          },
+        },
+      });
     }
 
     return effects;
+  }
+
+  protected parseTiming(): Timing {
+    if (this.text.includes('バトルポケモンのとき')) {
+      return {
+        type: 'continuous',
+        condition: 'active',
+      };
+    }
+    if (this.text.includes('1ターンに1回')) {
+      return {
+        type: 'once-per-turn',
+        restriction: {
+          type: 'ability-not-used',
+          abilityName: this.parseAbilityName(),
+        },
+      };
+    }
+    return {
+      type: 'continuous',
+    };
+  }
+
+  protected parseTargets(): Target[] {
+    return [
+      {
+        type: 'pokemon',
+        player: this.text.includes('相手の') ? 'opponent' : 'self',
+        location: {
+          type: 'active',
+        },
+      },
+    ];
+  }
+
+  protected parseAbilityName(): string {
+    const match = this.text.match(/「(.+?)」/);
+    return match ? match[1] : '';
   }
 }

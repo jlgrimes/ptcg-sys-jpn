@@ -4,8 +4,10 @@ import { Effect, EffectType, Filter } from '../types';
 export class BenchPlacementParser extends BaseParser<Effect> {
   canParse(): boolean {
     return (
-      this.text.includes('ベンチ') &&
-      (this.text.includes('出す') || this.text.includes('置く'))
+      (this.text.includes('出す') || this.text.includes('置く')) &&
+      (this.text.includes('ベンチ') ||
+        this.text.includes('山札から') ||
+        this.text.includes('手札から'))
     );
   }
 
@@ -18,35 +20,38 @@ export class BenchPlacementParser extends BaseParser<Effect> {
     const filters = this.parseFilters();
 
     // Add place effect first
-    effects.push(
-      this.createEffect(EffectType.Place, {
+    effects.push({
+      type: EffectType.Place,
+      targets: [
+        {
+          type: 'pokemon',
+          player,
+          count,
+          location: {
+            type: 'bench',
+          },
+          ...(filters && { filters }),
+        },
+      ],
+    });
+
+    // Add search effect after place effect
+    if (this.text.includes('山札から')) {
+      effects.push({
+        type: EffectType.Search,
         targets: [
           {
             type: 'pokemon',
             player,
-            location: { type: 'bench' },
             count,
+            location: {
+              type: 'deck',
+              shuffle: true,
+            },
             ...(filters && { filters }),
           },
         ],
-      })
-    );
-
-    // Add search effect if from deck
-    if (this.text.includes('山札')) {
-      effects.push(
-        this.createEffect(EffectType.Search, {
-          targets: [
-            {
-              type: 'pokemon',
-              player,
-              location: { type: 'deck', shuffle: true },
-              count,
-              ...(filters && { filters }),
-            },
-          ],
-        })
-      );
+      });
     }
 
     return effects;

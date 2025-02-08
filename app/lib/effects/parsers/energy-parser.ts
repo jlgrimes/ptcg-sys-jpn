@@ -14,7 +14,7 @@ export class EnergyParser extends BaseParser<Effect> {
 
     const effects: Effect[] = [];
     const player = this.text.includes('相手の') ? 'opponent' : 'self';
-    const count = this.text.includes('まで') ? this.parseCount('energy') : 1;
+    const count = this.parseCount('energy');
     const filters = this.text.includes('基本エネルギー')
       ? [{ type: 'card-type' as const, value: 'basic' }]
       : undefined;

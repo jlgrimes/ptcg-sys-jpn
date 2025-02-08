@@ -184,10 +184,10 @@ export abstract class BaseParser<T extends Effect = Effect> {
     type: 'card' | 'energy' | 'pokemon' | 'trainer' = 'card'
   ): number {
     const patterns = {
-      energy: /エネルギーを(\d+)個/,
-      pokemon: /(\d+)匹/,
-      trainer: /(\d+)枚/,
-      card: /(\d+)枚/,
+      energy: /エネルギーを(\d+)(個|枚)(まで)?/,
+      pokemon: /(\d+)匹(まで)?/,
+      trainer: /(\d+)枚(まで)?/,
+      card: /(\d+)枚(まで)?/,
     };
 
     const match = this.text.match(patterns[type]);

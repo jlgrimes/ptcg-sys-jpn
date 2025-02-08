@@ -19,6 +19,7 @@ export class DamageParser extends BaseParser<Effect> {
           type: 'pokemon',
           player: 'opponent',
           location: { type: 'active' },
+          count: 1,
         },
       ],
     });
