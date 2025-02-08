@@ -7,26 +7,6 @@ describe('Bench Placement Effects', () => {
       '山札からたねポケモンを1枚選び、ベンチに出す。その後、山札を切る。';
     const expectedEffects = [
       {
-        type: EffectType.Search,
-        targets: [
-          {
-            type: 'pokemon',
-            player: 'self',
-            location: {
-              type: 'deck',
-              shuffle: true,
-            },
-            count: 1,
-            filters: [
-              {
-                type: 'card-type',
-                value: 'basic',
-              },
-            ],
-          },
-        ],
-      },
-      {
         type: EffectType.Place,
         targets: [
           {
@@ -42,6 +22,20 @@ describe('Bench Placement Effects', () => {
                 value: 'basic',
               },
             ],
+          },
+        ],
+      },
+      {
+        type: EffectType.Search,
+        targets: [
+          {
+            type: 'pokemon',
+            player: 'self',
+            location: {
+              type: 'deck',
+              shuffle: true,
+            },
+            count: 1,
           },
         ],
       },
@@ -85,26 +79,6 @@ describe('Bench Placement Effects', () => {
 
     const expectedEffects = [
       {
-        type: EffectType.Search,
-        targets: [
-          {
-            type: 'pokemon',
-            player: 'self',
-            location: {
-              type: 'deck',
-              shuffle: true,
-            },
-            count: 1,
-            filters: [
-              {
-                type: 'card-type',
-                value: 'stage2',
-              },
-            ],
-          },
-        ],
-      },
-      {
         type: EffectType.Place,
         targets: [
           {
@@ -120,6 +94,20 @@ describe('Bench Placement Effects', () => {
                 value: 'stage2',
               },
             ],
+          },
+        ],
+      },
+      {
+        type: EffectType.Search,
+        targets: [
+          {
+            type: 'pokemon',
+            player: 'self',
+            location: {
+              type: 'deck',
+              shuffle: true,
+            },
+            count: 1,
           },
         ],
       },
@@ -135,26 +123,6 @@ describe('Bench Placement Effects', () => {
 
     const expectedEffects = [
       {
-        type: EffectType.Search,
-        targets: [
-          {
-            type: 'pokemon',
-            player: 'opponent',
-            location: {
-              type: 'deck',
-              shuffle: true,
-            },
-            count: 1,
-            filters: [
-              {
-                type: 'card-type',
-                value: 'basic',
-              },
-            ],
-          },
-        ],
-      },
-      {
         type: EffectType.Place,
         targets: [
           {
@@ -170,6 +138,20 @@ describe('Bench Placement Effects', () => {
                 value: 'basic',
               },
             ],
+          },
+        ],
+      },
+      {
+        type: EffectType.Search,
+        targets: [
+          {
+            type: 'pokemon',
+            player: 'opponent',
+            location: {
+              type: 'deck',
+              shuffle: true,
+            },
+            count: 1,
           },
         ],
       },

@@ -9,7 +9,7 @@ export class BenchPlacementParser extends BaseParser<Effect> {
     );
   }
 
-  parse(): Effect | null {
+  parse(): Effect | Effect[] | null {
     if (!this.canParse()) return null;
 
     const player = this.text.includes('相手の') ? 'opponent' : 'self';
@@ -18,7 +18,29 @@ export class BenchPlacementParser extends BaseParser<Effect> {
     const filters = this.parseFilters();
     const count = this.parseCount('pokemon');
 
-    // Create the place effect
+    const effects: Effect[] = [];
+
+    // Create the search effect first if searching from deck
+    if (fromDeck) {
+      const searchEffect: Effect = {
+        type: EffectType.Search,
+        targets: [
+          {
+            type: 'pokemon',
+            player,
+            location: {
+              type: 'deck',
+              ...(shuffle && { shuffle: true }),
+            },
+            count,
+            ...(filters && { filters }),
+          },
+        ],
+      };
+      effects.push(searchEffect);
+    }
+
+    // Then create the place effect
     const placeEffect: Effect = {
       type: EffectType.Place,
       targets: [
@@ -27,15 +49,16 @@ export class BenchPlacementParser extends BaseParser<Effect> {
           player,
           location: {
             type: 'bench',
-            ...(fromDeck && shuffle && { shuffle: true }),
           },
           count,
           ...(filters && { filters }),
         },
       ],
     };
+    effects.push(placeEffect);
 
-    return placeEffect;
+    // Return single effect if not from deck, otherwise return array
+    return fromDeck ? effects : placeEffect;
   }
 
   protected parseFilters(): Filter[] | undefined {
