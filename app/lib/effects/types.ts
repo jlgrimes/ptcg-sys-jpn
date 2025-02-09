@@ -11,6 +11,7 @@ export enum EffectType {
   Condition = 'condition',
   MoveFailure = 'move-failure',
   Shuffle = 'shuffle',
+  Switch = 'switch',
 }
 
 // Core types
@@ -122,6 +123,10 @@ export interface EnergyEffect extends BaseEffect {
 
 export interface PlaceEffect extends BaseEffect {
   type: EffectType.Place;
+}
+
+export interface SwitchEffect extends BaseEffect {
+  type: EffectType.Switch;
 }
 
 export type Effect = BaseEffect;
