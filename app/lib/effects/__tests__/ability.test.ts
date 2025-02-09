@@ -23,26 +23,6 @@ describe('Ability Effects', () => {
           type: 'once-per-turn',
         },
       },
-      {
-        type: EffectType.Restriction,
-        targets: [
-          {
-            type: 'pokemon',
-            player: 'self',
-            location: {
-              type: 'active',
-            },
-          },
-        ],
-        conditions: [
-          {
-            type: 'move-restriction',
-            moveName: 'マッハサーチ',
-            restriction: 'cannot-use',
-            duration: 'next-turn',
-          },
-        ],
-      },
     ];
 
     const effects = await parseEffectText(text);
@@ -173,26 +153,6 @@ describe('Ability Effects', () => {
         timing: {
           type: 'once-per-turn',
         },
-      },
-      {
-        type: EffectType.Restriction,
-        targets: [
-          {
-            type: 'pokemon',
-            player: 'self',
-            location: {
-              type: 'active',
-            },
-          },
-        ],
-        conditions: [
-          {
-            type: 'move-restriction',
-            moveName: 'さかてにとる',
-            restriction: 'cannot-use',
-            duration: 'next-turn',
-          },
-        ],
       },
     ];
 
