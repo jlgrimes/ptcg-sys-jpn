@@ -22,6 +22,7 @@ export class HandToDeckParser extends BaseParser<Effect> {
     const players: ('self' | 'opponent')[] = isForBoth
       ? ['self', 'opponent']
       : ['self'];
+
     for (const player of players) {
       if (isShuffleIn) {
         // For shuffling into deck, use Shuffle effect
@@ -67,41 +68,6 @@ export class HandToDeckParser extends BaseParser<Effect> {
                 value: 0, // Used to indicate bottom of deck placement
               },
             ],
-          })
-        );
-      }
-    }
-
-    // Add draw effect
-    if (this.text.includes('山札を')) {
-      const drawMatch = this.text.match(/(\d+)枚引く/);
-      const drawCount = drawMatch ? parseInt(drawMatch[1]) : undefined;
-
-      for (const player of players) {
-        effects.push(
-          this.createEffect(EffectType.Draw, {
-            targets: [
-              {
-                type: 'card',
-                player,
-                location: { type: 'deck' },
-              },
-            ],
-            ...(drawCount
-              ? { value: drawCount }
-              : {
-                  conditions: [
-                    {
-                      type: 'card-count',
-                      target: {
-                        type: 'card',
-                        player,
-                        location: { type: 'prize' },
-                      },
-                      comparison: 'equal',
-                    },
-                  ],
-                }),
           })
         );
       }
