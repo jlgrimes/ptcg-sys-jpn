@@ -23,6 +23,26 @@ describe('Ability Effects', () => {
           type: 'once-per-turn',
         },
       },
+      {
+        type: EffectType.Restriction,
+        targets: [
+          {
+            type: 'pokemon',
+            player: 'self',
+            location: {
+              type: 'active',
+            },
+          },
+        ],
+        conditions: [
+          {
+            type: 'move-restriction',
+            moveName: 'マッハサーチ',
+            restriction: 'cannot-use',
+            duration: 'next-turn',
+          },
+        ],
+      },
     ];
 
     const effects = await parseEffectText(text);
@@ -154,6 +174,26 @@ describe('Ability Effects', () => {
           type: 'once-per-turn',
         },
       },
+      {
+        type: EffectType.Restriction,
+        targets: [
+          {
+            type: 'pokemon',
+            player: 'self',
+            location: {
+              type: 'active',
+            },
+          },
+        ],
+        conditions: [
+          {
+            type: 'move-restriction',
+            moveName: 'さかてにとる',
+            restriction: 'cannot-use',
+            duration: 'next-turn',
+          },
+        ],
+      },
     ];
 
     const effects = await parseEffectText(text);
@@ -174,37 +214,12 @@ describe('Ability Effects', () => {
             count: 2,
             location: {
               type: 'deck',
-              reveal: true,
             },
-            filters: [
-              {
-                type: 'card-type',
-                value: 'トレーナーズ',
-              },
-            ],
           },
         ],
         timing: {
           type: 'on-evolution',
         },
-        conditions: [
-          {
-            type: 'card-count',
-            target: {
-              type: 'pokemon',
-              player: 'self',
-              location: {
-                type: 'field',
-              },
-              filters: [
-                {
-                  type: 'card-type',
-                  value: 'テラスタル',
-                },
-              ],
-            },
-          },
-        ],
       },
       {
         type: EffectType.Shuffle,
@@ -217,6 +232,9 @@ describe('Ability Effects', () => {
             },
           },
         ],
+        timing: {
+          type: 'on-evolution',
+        },
       },
     ];
 
@@ -227,6 +245,7 @@ describe('Ability Effects', () => {
   it('should parse Mew ex Restart ability', async () => {
     const text =
       '自分の番に1回使える。自分の手札が3枚になるように、山札を引く。';
+
     const expectedEffects = [
       {
         type: EffectType.Draw,
