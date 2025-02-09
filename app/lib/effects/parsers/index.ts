@@ -15,6 +15,7 @@ import { ConditionParser } from './condition-parser';
 import { MoveRestrictionParser } from './move-restriction-parser';
 import { BenchPlacementParser } from './bench-placement-parser';
 import { SwitchParser } from './switch-parser';
+import { HandToDeckParser } from './hand-to-deck-parser';
 import { Logger } from '../../utils/logger';
 import { BaseEffectParser } from './utils/base-effect-parser';
 import { BaseEffect } from '../types';
@@ -78,6 +79,7 @@ registry.register(CountDamageParser, 800);
 registry.register(BenchDamageParser, 700);
 registry.register(DamageModifierParser, 600);
 registry.register(StatusParser, 500);
+registry.register(HandToDeckParser, 450);
 registry.register(EnergyParser, 400);
 registry.register(BenchPlacementParser, 300); // Add before generic place/search
 registry.register(SwitchParser, 250); // Add between bench placement and place
