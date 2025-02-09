@@ -14,7 +14,6 @@ import { StatusParser } from './status-parser';
 import { ConditionParser } from './condition-parser';
 import { MoveRestrictionParser } from './move-restriction-parser';
 import { BenchPlacementParser } from './bench-placement-parser';
-import { ParserError } from './parser-error';
 import { Logger } from '../../utils/logger';
 import { BaseEffectParser } from './utils/base-effect-parser';
 import { BaseEffect } from '../types';
@@ -39,14 +38,20 @@ class ParserRegistry {
   }
 
   parse(phrase: TokenizedPhrase): BaseEffect[] {
-    const effects: BaseEffect[] = [];
-    for (const { parser } of this.parsers) {
+    // Sort parsers by priority (higher priority first)
+    const sortedParsers = [...this.parsers].sort(
+      (a, b) => b.priority - a.priority
+    );
+
+    // Try each parser in order until one succeeds
+    for (const { parser } of sortedParsers) {
       try {
         const instance = new parser(phrase);
         if (instance.canParse()) {
           const result = instance.parse();
           if (result) {
-            effects.push(...(Array.isArray(result) ? result : [result]));
+            // Return the first successful parse result
+            return Array.isArray(result) ? result : [result];
           }
         }
       } catch (error) {
@@ -59,14 +64,15 @@ class ParserRegistry {
         throw err;
       }
     }
-    return effects;
+
+    // If no parser matched, return empty array
+    return [];
   }
 }
 
 export const registry = new ParserRegistry();
 
 // Register parsers in priority order (higher number = higher priority)
-registry.register(SearchParser, 100);
 registry.register(CountDamageParser, 800);
 registry.register(BenchDamageParser, 700);
 registry.register(DamageModifierParser, 600);
@@ -74,6 +80,7 @@ registry.register(StatusParser, 500);
 registry.register(EnergyParser, 400);
 registry.register(BenchPlacementParser, 300); // Add before generic place/search
 registry.register(PlaceParser, 200);
+registry.register(SearchParser, 100);
 registry.register(DiscardParser, 50);
 registry.register(DrawParser, 40);
 registry.register(ConditionParser, 30);
