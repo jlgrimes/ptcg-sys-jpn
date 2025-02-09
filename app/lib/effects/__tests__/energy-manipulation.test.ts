@@ -66,4 +66,61 @@ describe('Energy Manipulation Effects', () => {
     const effects = await parseEffectText(text);
     expect(effects).toEqual(expectedEffects);
   });
+
+  it('should parse unlimited basic energy attach to Nanjamo effect', async () => {
+    const text =
+      '自分の番に何回でも使える。自分の手札から「基本エネルギー」を1枚選び、自分の「ナンジャモのポケモン」につける。';
+
+    const expectedEffects = [
+      {
+        type: EffectType.Search,
+        targets: [
+          {
+            type: 'energy',
+            player: 'self',
+            location: {
+              type: 'hand',
+            },
+            count: 1,
+            filters: [
+              {
+                type: 'card-type',
+                value: 'basic',
+              },
+            ],
+          },
+        ],
+        timing: {
+          type: 'continuous',
+          duration: 'turn',
+        },
+      },
+      {
+        type: EffectType.Energy,
+        targets: [
+          {
+            type: 'pokemon',
+            player: 'self',
+            location: {
+              type: 'field',
+            },
+            filters: [
+              {
+                type: 'card-type',
+                value: 'ナンジャモ',
+              },
+            ],
+            count: 1,
+          },
+        ],
+        timing: {
+          type: 'continuous',
+          duration: 'turn',
+        },
+      },
+    ];
+
+    const effects = await parseEffectText(text);
+    expect(effects).toEqual(expectedEffects);
+  });
 });

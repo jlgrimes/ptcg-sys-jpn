@@ -35,21 +35,42 @@ export class EnergyParser extends BaseParser<Effect> {
       return effects;
     }
 
-    // Handle attach effect
-    if (this.text.includes('トラッシュから')) {
+    // Handle search effect for energy from hand or discard
+    const searchLocation = this.text.includes('トラッシュから')
+      ? 'discard'
+      : this.text.includes('手札から')
+      ? 'hand'
+      : undefined;
+    if (searchLocation) {
       effects.push(
         this.createEffect(EffectType.Search, {
           targets: [
             {
               type: 'energy',
               player,
-              location: { type: 'discard' },
+              location: { type: searchLocation },
               count,
               ...(filters && { filters }),
             },
           ],
+          ...(this.text.includes('何回でも使える') && {
+            timing: {
+              type: 'continuous',
+              duration: 'turn',
+            },
+          }),
         })
       );
+    }
+
+    // Parse target Pokemon filters
+    const pokemonFilters = [];
+    const pokemonNameMatch = this.text.match(/「([^」]+)のポケモン」/);
+    if (pokemonNameMatch) {
+      pokemonFilters.push({
+        type: 'card-type' as const,
+        value: pokemonNameMatch[1],
+      });
     }
 
     effects.push(
@@ -59,11 +80,23 @@ export class EnergyParser extends BaseParser<Effect> {
             type: 'pokemon',
             player,
             location: {
-              type: this.text.includes('ベンチ') ? 'bench' : 'active',
+              type:
+                pokemonFilters.length > 0
+                  ? 'field'
+                  : this.text.includes('ベンチ')
+                  ? 'bench'
+                  : 'active',
             },
             count,
+            ...(pokemonFilters.length > 0 && { filters: pokemonFilters }),
           },
         ],
+        ...(this.text.includes('何回でも使える') && {
+          timing: {
+            type: 'continuous',
+            duration: 'turn',
+          },
+        }),
       })
     );
 
