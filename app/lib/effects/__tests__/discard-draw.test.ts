@@ -35,5 +35,27 @@ describe('Discard Draw Effects', () => {
 
     const effects = await parseEffectText(text);
     expect(effects).toEqual(expectedEffects);
-  });
+  }, 10000);
+
+  it('should parse mill effect from opponent deck', async () => {
+    const text = '相手の山札を上から2枚トラッシュする';
+    const expectedEffects = [
+      {
+        type: EffectType.Discard,
+        targets: [
+          {
+            type: 'card',
+            player: 'opponent',
+            location: {
+              type: 'deck',
+            },
+            count: 2,
+          },
+        ],
+      },
+    ];
+
+    const effects = await parseEffectText(text);
+    expect(effects).toEqual(expectedEffects);
+  }, 10000);
 });

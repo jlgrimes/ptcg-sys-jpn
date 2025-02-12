@@ -17,7 +17,7 @@ export class DiscardParser extends BaseParser<Effect> {
         targets: [
           {
             type: this.parseTargetType(),
-            player: 'self',
+            player: this.parsePlayer(),
             location: this.parseLocation(),
             count: this.parseCount(),
           },
@@ -59,6 +59,10 @@ export class DiscardParser extends BaseParser<Effect> {
     if (this.text.includes('山札')) {
       return { type: 'deck' };
     }
+    // For トラッシュして pattern (discard and do something), default to hand
+    if (this.text.includes('トラッシュして')) {
+      return { type: 'hand' };
+    }
     // Default to discard if no specific location mentioned
     return { type: 'discard' };
   }
@@ -69,5 +73,12 @@ export class DiscardParser extends BaseParser<Effect> {
       return 'card';
     }
     return 'pokemon';
+  }
+
+  protected parsePlayer(): 'self' | 'opponent' {
+    if (this.text.includes('相手')) {
+      return 'opponent';
+    }
+    return 'self';
   }
 }
