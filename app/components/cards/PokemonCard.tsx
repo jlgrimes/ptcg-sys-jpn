@@ -34,10 +34,27 @@ function CardSkeleton() {
 
 async function CardContent({ id }: { id: number }) {
   const card: CardDetails = await getCard(id);
+  console.log(card);
 
   return (
     <div className='border rounded-lg p-4 shadow-lg bg-white'>
       <h2 className='text-xl font-bold mb-2'>{card.name}</h2>
+
+      {/* Pokemon Info Section */}
+      <div className='text-sm text-gray-600 mb-4'>
+        <p>
+          <strong>{card.pokemonInfo.number}</strong> - {card.pokemonInfo.type}
+        </p>
+        <p>
+          Height: {card.pokemonInfo.height} • Weight: {card.pokemonInfo.weight}
+        </p>
+      </div>
+
+      {/* Description */}
+      <div className='text-sm bg-gray-50 p-3 rounded-md mb-4 italic'>
+        {card.description}
+      </div>
+
       <div className='grid grid-cols-2 gap-2 text-sm'>
         <div>
           <p>
@@ -59,6 +76,14 @@ async function CardContent({ id }: { id: number }) {
           </p>
         </div>
       </div>
+
+      {/* Card Effect (if present) */}
+      {card.cardEffect && (
+        <div className='mt-4 text-sm bg-blue-50 p-3 rounded-md'>
+          <h3 className='font-bold mb-1'>Card Effect:</h3>
+          <p>{card.cardEffect}</p>
+        </div>
+      )}
 
       {card.abilities && card.abilities.length > 0 && (
         <div className='mt-4'>
