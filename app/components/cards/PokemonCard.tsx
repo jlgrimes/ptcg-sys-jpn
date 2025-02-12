@@ -1,5 +1,7 @@
-import { CardDetails, Ability, Move } from '@/types/pokemon';
+import { CardDetails, Move } from '@/types/pokemon';
 import { Suspense } from 'react';
+import { parseEffectText } from '@/app/lib/effect-parser';
+import { Effect, Target } from '@/app/lib/effects/types';
 
 async function getCard(id: number) {
   const res = await fetch(`http://localhost:3001/api/pokemon-card/${id}`, {
@@ -11,6 +13,28 @@ async function getCard(id: number) {
   }
 
   return res.json();
+}
+
+function EffectDisplay({ effects }: { effects: Effect[] }) {
+  console.log(effects);
+  return (
+    <div className='mt-2 text-xs bg-gray-100 p-2 rounded'>
+      {effects.map((effect, index) => (
+        <div key={index} className='mb-1'>
+          <span className='font-semibold'>{effect.type}</span>
+          {effect.value && <span> ({effect.value})</span>}
+          {effect.targets && (
+            <span className='ml-1'>
+              →{' '}
+              {effect.targets
+                .map((t: Target) => `${t.player}:${t.type}`)
+                .join(', ')}
+            </span>
+          )}
+        </div>
+      ))}
+    </div>
+  );
 }
 
 function CardSkeleton() {
@@ -34,6 +58,18 @@ function CardSkeleton() {
 
 async function CardContent({ id }: { id: number }) {
   const card: CardDetails = await getCard(id);
+
+  // Parse effects for abilities and card effect
+  const abilityEffects = await Promise.all(
+    card.abilities.map(async ability => ({
+      name: ability.name,
+      effects: await parseEffectText(ability.description),
+    }))
+  );
+
+  const cardEffects = card.cardEffect
+    ? await parseEffectText(card.cardEffect)
+    : [];
 
   return (
     <div className='border rounded-lg p-4 shadow-lg bg-white'>
@@ -80,21 +116,24 @@ async function CardContent({ id }: { id: number }) {
             </div>
           </div>
 
-          {/* Card Effect (if present) */}
+          {/* Card Effect with parsed effects */}
           {card.cardEffect && (
             <div className='mt-4 text-sm bg-blue-50 p-3 rounded-md'>
               <h3 className='font-bold mb-1'>Card Effect:</h3>
               <p>{card.cardEffect}</p>
+              <EffectDisplay effects={cardEffects} />
             </div>
           )}
 
+          {/* Abilities with parsed effects */}
           {card.abilities && card.abilities.length > 0 && (
             <div className='mt-4'>
               <h3 className='font-bold'>Abilities:</h3>
-              {card.abilities.map((ability: Ability, index: number) => (
+              {abilityEffects.map((ability, index) => (
                 <div key={index} className='mt-2'>
                   <p className='font-semibold'>{ability.name}</p>
-                  <p className='text-sm'>{ability.description}</p>
+                  <p className='text-sm'>{card.abilities[index].description}</p>
+                  <EffectDisplay effects={ability.effects} />
                 </div>
               ))}
             </div>
