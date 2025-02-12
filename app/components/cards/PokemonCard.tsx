@@ -1,4 +1,4 @@
-import { CardDetails, Move } from '@/types/pokemon';
+import { CardDetails } from '@/types/pokemon';
 import { Suspense } from 'react';
 import { parseEffectText } from '@/app/lib/effect-parser';
 import { Effect, Target } from '@/app/lib/effects/types';
@@ -59,7 +59,7 @@ function CardSkeleton() {
 async function CardContent({ id }: { id: number }) {
   const card: CardDetails = await getCard(id);
 
-  // Parse effects for abilities and card effect
+  // Parse effects for abilities, card effect, and moves
   const abilityEffects = await Promise.all(
     card.abilities.map(async ability => ({
       name: ability.name,
@@ -70,6 +70,13 @@ async function CardContent({ id }: { id: number }) {
   const cardEffects = card.cardEffect
     ? await parseEffectText(card.cardEffect)
     : [];
+
+  const moveEffects = await Promise.all(
+    card.moves.map(async move => ({
+      ...move,
+      effects: await parseEffectText(move.description),
+    }))
+  );
 
   return (
     <div className='border rounded-lg p-4 shadow-lg bg-white'>
@@ -142,7 +149,7 @@ async function CardContent({ id }: { id: number }) {
           {card.moves && card.moves.length > 0 && (
             <div className='mt-4'>
               <h3 className='font-bold'>Moves:</h3>
-              {card.moves.map((move: Move, index: number) => (
+              {moveEffects.map((move, index: number) => (
                 <div key={index} className='mt-2'>
                   <p className='font-semibold'>
                     {move.name} - {move.damage}
@@ -151,6 +158,7 @@ async function CardContent({ id }: { id: number }) {
                   <p className='text-xs'>
                     Energy: {move.energyTypes.join(', ')} ({move.energyCount})
                   </p>
+                  <EffectDisplay effects={move.effects} />
                 </div>
               ))}
             </div>
