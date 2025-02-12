@@ -46,6 +46,7 @@ export interface Filter {
   type: 'card-type' | 'energy-type' | 'status' | 'evolution-stage' | 'hp';
   value: string | number;
   comparison?: 'less-than-or-equal' | 'equal' | 'not-equal';
+  subtype?: 'basic' | 'special'; // For energy types
 }
 
 export interface Condition {
@@ -55,7 +56,8 @@ export interface Condition {
     | 'status'
     | 'location'
     | 'move-restriction'
-    | 'move-used';
+    | 'move-used'
+    | 'evolution';
   value?: number;
   values?: number[];
   comparison?: 'equal' | 'not-equal';
@@ -64,7 +66,7 @@ export interface Condition {
   onFailure?: Effect[];
   moveName?: string;
   move?: string;
-  timing?: 'last-turn' | 'next-turn';
+  timing?: 'last-turn' | 'next-turn' | 'on-play';
   restriction?: 'cannot-use';
   duration?: 'next-turn';
 }

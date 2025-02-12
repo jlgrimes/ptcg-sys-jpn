@@ -59,9 +59,30 @@ function EffectDisplay({ effects }: { effects: Effect[] }) {
                     {i > 0 ? ', ' : ''}
                     {t.player}:{t.type}
                     {t.count && ` (${t.count})`}
+                    {t.filters && t.filters.length > 0 && (
+                      <span className='text-gray-600'>
+                        {' '}
+                        [
+                        {t.filters.map((f, fi) => (
+                          <span key={fi}>
+                            {fi > 0 ? ', ' : ''}
+                            {f.type === 'card-type'
+                              ? f.value
+                              : f.type === 'energy-type'
+                              ? f.value + (f.subtype ? ` (${f.subtype})` : '')
+                              : `${f.type}:${f.value}`}
+                            {f.comparison && ` ${f.comparison}`}
+                          </span>
+                        ))}
+                        ]
+                      </span>
+                    )}
                   </span>
                 ))}
               </span>
+            )}
+            {effect.what && (
+              <span className='text-gray-600 ml-1'>• {effect.what}</span>
             )}
           </div>
         </div>
