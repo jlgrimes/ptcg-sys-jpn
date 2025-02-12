@@ -71,4 +71,32 @@ describe('Effect Parser', () => {
       ],
     });
   });
+
+  it('should parse conditional once-per-turn timing with discard and draw', async () => {
+    const text =
+      '自分の番に、自分の手札を1枚トラッシュするなら、1回使える。自分の山札を2枚引く。';
+    const effects = await parseEffectText(text);
+
+    expect(effects).toHaveLength(2);
+    expect(effects[0]).toMatchObject({
+      type: 'discard',
+      targets: [
+        {
+          type: 'card',
+          player: 'self',
+          location: {
+            type: 'hand',
+          },
+          count: 1,
+        },
+      ],
+    });
+    expect(effects[1]).toMatchObject({
+      type: 'draw',
+      value: 2,
+      timing: {
+        type: 'once-per-turn',
+      },
+    });
+  });
 });

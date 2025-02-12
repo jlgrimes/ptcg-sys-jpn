@@ -27,7 +27,11 @@ function parseTiming(text: string): Timing | undefined {
       type: 'on-evolution',
     };
   }
-  if (text.includes('1ターンに1回') || text.includes('自分の番に1回使える')) {
+  if (
+    text.includes('1ターンに1回') ||
+    text.includes('自分の番に1回使える') ||
+    text.match(/自分の番に、.+なら、1回使える/)
+  ) {
     return {
       type: 'once-per-turn',
     };

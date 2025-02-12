@@ -1,5 +1,5 @@
 import { BaseParser } from './base-parser';
-import { Effect, EffectType } from '../types';
+import { Effect, EffectType, Location } from '../types';
 
 export class DiscardParser extends BaseParser<Effect> {
   canParse(): boolean {
@@ -16,9 +16,9 @@ export class DiscardParser extends BaseParser<Effect> {
       this.createEffect(EffectType.Discard, {
         targets: [
           {
-            type: 'pokemon',
+            type: this.parseTargetType(),
             player: 'self',
-            location: { type: 'discard' },
+            location: this.parseLocation(),
             count: this.parseCount(),
           },
         ],
@@ -50,5 +50,24 @@ export class DiscardParser extends BaseParser<Effect> {
   protected parseCount(): number {
     const match = this.text.match(/(\d+)(枚|個)/);
     return match ? parseInt(match[1]) : 1;
+  }
+
+  protected parseLocation(): Location {
+    if (this.text.includes('手札')) {
+      return { type: 'hand' };
+    }
+    if (this.text.includes('山札')) {
+      return { type: 'deck' };
+    }
+    // Default to discard if no specific location mentioned
+    return { type: 'discard' };
+  }
+
+  protected parseTargetType(): 'pokemon' | 'card' | 'energy' | 'trainer' {
+    // In Japanese, 枚 is used for cards, while 個 is more commonly used for other items
+    if (this.text.includes('枚')) {
+      return 'card';
+    }
+    return 'pokemon';
   }
 }

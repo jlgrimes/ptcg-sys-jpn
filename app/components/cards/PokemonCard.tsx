@@ -16,21 +16,50 @@ async function getCard(id: number) {
 }
 
 function EffectDisplay({ effects }: { effects: Effect[] }) {
-  console.log(effects);
   return (
     <div className='mt-2 text-xs bg-gray-100 p-2 rounded'>
       {effects.map((effect, index) => (
-        <div key={index} className='mb-1'>
-          <span className='font-semibold'>{effect.type}</span>
-          {effect.value && <span> ({effect.value})</span>}
-          {effect.targets && (
-            <span className='ml-1'>
-              →{' '}
-              {effect.targets
-                .map((t: Target) => `${t.player}:${t.type}`)
-                .join(', ')}
-            </span>
-          )}
+        <div key={index} className='mb-2 relative'>
+          {/* Conditions and Timing Badges */}
+          <div className='absolute -top-2 -left-2 flex flex-wrap gap-1 max-w-[calc(100%-16px)]'>
+            {/* Timing Badge */}
+            {effect.timing && (
+              <div className='bg-purple-500 text-white px-2 py-0.5 rounded-full text-[10px] shadow-sm'>
+                {effect.timing.type}
+                {effect.timing.duration && ` (${effect.timing.duration})`}
+              </div>
+            )}
+
+            {/* Condition Badges */}
+            {effect.conditions?.map((condition, idx) => (
+              <div
+                key={idx}
+                className='bg-blue-500 text-white px-2 py-0.5 rounded-full text-[10px] shadow-sm'
+              >
+                {condition.type === 'move-used' ? (
+                  <>Used {condition.move}</>
+                ) : condition.type === 'coin-flip' ? (
+                  <>Coin Flip {condition.value}x</>
+                ) : (
+                  condition.type
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Effect Content */}
+          <div className='pt-3 px-2 bg-white rounded border'>
+            <span className='font-semibold'>{effect.type}</span>
+            {effect.value && <span> ({effect.value})</span>}
+            {effect.targets && (
+              <span className='ml-1'>
+                →{' '}
+                {effect.targets
+                  .map((t: Target) => `${t.player}:${t.type}`)
+                  .join(', ')}
+              </span>
+            )}
+          </div>
         </div>
       ))}
     </div>

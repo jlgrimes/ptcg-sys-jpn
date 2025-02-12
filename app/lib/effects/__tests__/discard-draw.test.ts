@@ -9,10 +9,10 @@ describe('Discard Draw Effects', () => {
         type: EffectType.Discard,
         targets: [
           {
-            type: 'pokemon',
+            type: 'card',
             player: 'self',
             location: {
-              type: 'discard',
+              type: 'hand',
             },
             count: 1,
           },
