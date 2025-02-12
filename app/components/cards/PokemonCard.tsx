@@ -54,9 +54,13 @@ function EffectDisplay({ effects }: { effects: Effect[] }) {
             {effect.targets && (
               <span className='ml-1'>
                 →{' '}
-                {effect.targets
-                  .map((t: Target) => `${t.player}:${t.type}`)
-                  .join(', ')}
+                {effect.targets.map((t: Target, i: number) => (
+                  <span key={i}>
+                    {i > 0 ? ', ' : ''}
+                    {t.player}:{t.type}
+                    {t.count && ` (${t.count})`}
+                  </span>
+                ))}
               </span>
             )}
           </div>
