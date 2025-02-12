@@ -12,6 +12,7 @@ export enum EffectType {
   MoveFailure = 'move-failure',
   Shuffle = 'shuffle',
   Switch = 'switch',
+  Copy = 'copy',
 }
 
 // Core types
@@ -23,6 +24,8 @@ export interface BaseEffect {
   timing?: Timing;
   value?: number;
   status?: 'paralyzed' | 'asleep' | 'confused' | 'burned' | 'poisoned';
+  what?: 'move' | 'ability'; // Used by copy effects to specify what is being copied
+  count?: number; // Used by copy effects to specify how many to choose from
 }
 
 export interface Target {
@@ -135,6 +138,14 @@ export interface PlaceEffect extends BaseEffect {
 
 export interface SwitchEffect extends BaseEffect {
   type: EffectType.Switch;
+}
+
+export interface CopyEffect extends BaseEffect {
+  type: EffectType.Copy;
+  targets: [Target]; // The Pokemon whose move we're copying
+  filters?: Filter[]; // Any filters on what can be copied (e.g. specific Pokemon name)
+  what: 'move'; // What we're copying (for future extensibility)
+  count?: number; // How many to choose from, if specified
 }
 
 export type Effect = BaseEffect;

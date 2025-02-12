@@ -20,6 +20,7 @@ import { MoveConditionParser } from './move-condition-parser';
 import { Logger } from '../../utils/logger';
 import { BaseEffectParser } from './utils/base-effect-parser';
 import { BaseEffect } from '../types';
+import { CopyParser } from './copy-parser';
 
 export type ParserConstructor = new (phrase: TokenizedPhrase) =>
   | BaseParser<BaseEffect>
@@ -79,6 +80,7 @@ export const registry = new ParserRegistry();
 registry.register(MoveConditionParser, 900); // Highest priority for conditional moves
 registry.register(CountDamageParser, 800);
 registry.register(BenchDamageParser, 700);
+registry.register(CopyParser, 650); // High priority since it's a specific move-related action
 registry.register(DamageModifierParser, 600);
 registry.register(StatusParser, 500);
 registry.register(HandToDeckParser, 450);
