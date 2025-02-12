@@ -3,7 +3,7 @@ import { Suspense } from 'react';
 
 async function getCard(id: number) {
   const res = await fetch(`http://localhost:3001/api/pokemon-card/${id}`, {
-    cache: 'force-cache',
+    // cache: 'force-cache',
   });
 
   if (!res.ok) {
@@ -34,85 +34,101 @@ function CardSkeleton() {
 
 async function CardContent({ id }: { id: number }) {
   const card: CardDetails = await getCard(id);
-  console.log(card);
 
   return (
     <div className='border rounded-lg p-4 shadow-lg bg-white'>
-      <h2 className='text-xl font-bold mb-2'>{card.name}</h2>
-
-      {/* Pokemon Info Section */}
-      <div className='text-sm text-gray-600 mb-4'>
-        <p>
-          <strong>{card.pokemonInfo.number}</strong> - {card.pokemonInfo.type}
-        </p>
-        <p>
-          Height: {card.pokemonInfo.height} • Weight: {card.pokemonInfo.weight}
-        </p>
-      </div>
-
-      {/* Description */}
-      <div className='text-sm bg-gray-50 p-3 rounded-md mb-4 italic'>
-        {card.description}
-      </div>
-
-      <div className='grid grid-cols-2 gap-2 text-sm'>
+      <div className='grid grid-cols-[1fr_auto] gap-4'>
         <div>
-          <p>
-            <strong>Card ID:</strong> {card.cardId}
-          </p>
-          <p>
-            <strong>HP:</strong> {card.hp}
-          </p>
-          <p>
-            <strong>Type:</strong> {card.pokemonType}
-          </p>
-        </div>
-        <div>
-          <p>
-            <strong>Set:</strong> {card.set}
-          </p>
-          <p>
-            <strong>Illustrator:</strong> {card.illustrator}
-          </p>
-        </div>
-      </div>
+          <h2 className='text-xl font-bold mb-2'>{card.name}</h2>
 
-      {/* Card Effect (if present) */}
-      {card.cardEffect && (
-        <div className='mt-4 text-sm bg-blue-50 p-3 rounded-md'>
-          <h3 className='font-bold mb-1'>Card Effect:</h3>
-          <p>{card.cardEffect}</p>
-        </div>
-      )}
+          {/* Pokemon Info Section */}
+          <div className='text-sm text-gray-600 mb-4'>
+            <p>
+              <strong>{card.pokemonInfo.number}</strong> -{' '}
+              {card.pokemonInfo.type}
+            </p>
+            <p>
+              Height: {card.pokemonInfo.height} • Weight:{' '}
+              {card.pokemonInfo.weight}
+            </p>
+          </div>
 
-      {card.abilities && card.abilities.length > 0 && (
-        <div className='mt-4'>
-          <h3 className='font-bold'>Abilities:</h3>
-          {card.abilities.map((ability: Ability, index: number) => (
-            <div key={index} className='mt-2'>
-              <p className='font-semibold'>{ability.name}</p>
-              <p className='text-sm'>{ability.description}</p>
-            </div>
-          ))}
-        </div>
-      )}
+          {/* Description */}
+          <div className='text-sm bg-gray-50 p-3 rounded-md mb-4 italic'>
+            {card.description}
+          </div>
 
-      {card.moves && card.moves.length > 0 && (
-        <div className='mt-4'>
-          <h3 className='font-bold'>Moves:</h3>
-          {card.moves.map((move: Move, index: number) => (
-            <div key={index} className='mt-2'>
-              <p className='font-semibold'>
-                {move.name} - {move.damage}
+          <div className='grid grid-cols-2 gap-2 text-sm'>
+            <div>
+              <p>
+                <strong>Card ID:</strong> {card.cardId}
               </p>
-              <p className='text-sm'>{move.description}</p>
-              <p className='text-xs'>
-                Energy: {move.energyTypes.join(', ')} ({move.energyCount})
+              <p>
+                <strong>HP:</strong> {card.hp}
+              </p>
+              <p>
+                <strong>Type:</strong> {card.pokemonType}
               </p>
             </div>
-          ))}
+            <div>
+              <p>
+                <strong>Set:</strong> {card.set}
+              </p>
+              <p>
+                <strong>Illustrator:</strong> {card.illustrator}
+              </p>
+            </div>
+          </div>
+
+          {/* Card Effect (if present) */}
+          {card.cardEffect && (
+            <div className='mt-4 text-sm bg-blue-50 p-3 rounded-md'>
+              <h3 className='font-bold mb-1'>Card Effect:</h3>
+              <p>{card.cardEffect}</p>
+            </div>
+          )}
+
+          {card.abilities && card.abilities.length > 0 && (
+            <div className='mt-4'>
+              <h3 className='font-bold'>Abilities:</h3>
+              {card.abilities.map((ability: Ability, index: number) => (
+                <div key={index} className='mt-2'>
+                  <p className='font-semibold'>{ability.name}</p>
+                  <p className='text-sm'>{ability.description}</p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {card.moves && card.moves.length > 0 && (
+            <div className='mt-4'>
+              <h3 className='font-bold'>Moves:</h3>
+              {card.moves.map((move: Move, index: number) => (
+                <div key={index} className='mt-2'>
+                  <p className='font-semibold'>
+                    {move.name} - {move.damage}
+                  </p>
+                  <p className='text-sm'>{move.description}</p>
+                  <p className='text-xs'>
+                    Energy: {move.energyTypes.join(', ')} ({move.energyCount})
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
-      )}
+
+        {/* Card Image */}
+        <div className='w-64 flex-shrink-0'>
+          {card.imageUrl && (
+            <img
+              src={`https://www.pokemon-card.com${card.imageUrl}`}
+              alt={card.name}
+              className='w-full h-auto rounded-lg shadow-md'
+            />
+          )}
+        </div>
+      </div>
     </div>
   );
 }

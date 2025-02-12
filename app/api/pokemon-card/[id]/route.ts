@@ -42,6 +42,7 @@ interface CardDetails {
   retreatCost: string; // empty in this case
   evolution: string[]; // ["パンプジン", "バケッチャ"]
   set: string; // ポケモンカードゲームXY 拡張パック「ファントムゲート」
+  imageUrl: string; // Add the image URL to the response
 }
 
 interface Move {
@@ -70,6 +71,12 @@ export async function GET(
     const cardDetails: CardDetails = await page.evaluate(() => {
       const cleanText = (text: string | null | undefined) =>
         text?.replace(/\s+/g, ' ').trim() || '';
+
+      // Get card image
+      const cardImage =
+        document
+          .querySelector('img[src*="card_images"]')
+          ?.getAttribute('src') || '';
 
       // Debug: Log all h4 elements to see what we're working with
       console.log(
@@ -219,13 +226,14 @@ export async function GET(
         pokemonType,
         hp,
         cardEffect,
-        abilities: effectHeader ? [] : abilities,
-        moves: effectHeader ? [] : moves,
+        abilities,
+        moves,
         weakness,
         resistance,
         retreatCost,
         evolution,
         set,
+        imageUrl: cardImage,
       };
     });
 

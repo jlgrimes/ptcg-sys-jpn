@@ -47,4 +47,5 @@ export interface CardDetails {
   retreatCost: string;
   evolution: string[];
   set: string;
+  imageUrl: string;
 }
