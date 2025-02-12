@@ -143,23 +143,7 @@ async function CardContent({ id }: { id: number }) {
         <div>
           <h2 className='text-xl font-bold mb-2'>{card.name}</h2>
 
-          {/* Pokemon Info Section */}
-          <div className='text-sm text-gray-600 mb-4'>
-            <p>
-              <strong>{card.pokemonInfo.number}</strong> -{' '}
-              {card.pokemonInfo.type}
-            </p>
-            <p>
-              Height: {card.pokemonInfo.height} • Weight:{' '}
-              {card.pokemonInfo.weight}
-            </p>
-          </div>
-
-          {/* Description */}
-          <div className='text-sm bg-gray-50 p-3 rounded-md mb-4 italic'>
-            {card.description}
-          </div>
-
+          {/* Info Section */}
           <div className='grid grid-cols-2 gap-2 text-sm'>
             <div>
               <p>
@@ -169,15 +153,12 @@ async function CardContent({ id }: { id: number }) {
                 <strong>HP:</strong> {card.hp}
               </p>
               <p>
-                <strong>Type:</strong> {card.pokemonType}
+                <strong>Type:</strong> {card.type}
               </p>
             </div>
             <div>
               <p>
                 <strong>Set:</strong> {card.set}
-              </p>
-              <p>
-                <strong>Illustrator:</strong> {card.illustrator}
               </p>
             </div>
           </div>

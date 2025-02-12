@@ -1,3 +1,4 @@
+import { Ability, CardDetails, Move } from '@/types/pokemon';
 import { NextResponse } from 'next/server';
 import puppeteer from 'puppeteer';
 
@@ -14,43 +15,6 @@ enum EnergyType {
   Fairy = 'fairy',
   Dragon = 'dragon',
   Colorless = 'colorless', // matches with icon-none in the HTML
-}
-
-interface Ability {
-  name: string;
-  description: string;
-}
-
-interface CardDetails {
-  name: string; // バケッチャ
-  cardId: string; // XY4 043 / 088
-  pokemonInfo: {
-    number: string; // No.710
-    type: string; // かぼちゃポケモン
-    height: string; // 0.4 m
-    weight: string; // 5.0 kg
-  };
-  description: string; // 成仏できない 魂を カボチャの 体に 入れている。日暮れと ともに 動きはじめる。
-  illustrator: string; // HiRON
-  pokemonType: string; // たね
-  hp: string; // HP 60
-  cardEffect?: string; // Effect text for trainer/energy cards
-  abilities: Ability[];
-  moves: Move[];
-  weakness: string; // ×2
-  resistance: string; // －20
-  retreatCost: string; // empty in this case
-  evolution: string[]; // ["パンプジン", "バケッチャ"]
-  set: string; // ポケモンカードゲームXY 拡張パック「ファントムゲート」
-  imageUrl: string; // Add the image URL to the response
-}
-
-interface Move {
-  name: string;
-  damage: string;
-  description: string;
-  energyCount: number;
-  energyTypes: EnergyType[];
 }
 
 export async function GET(
@@ -99,33 +63,9 @@ export async function GET(
       const name = cleanText(document.querySelector('h1')?.textContent);
       const cardId = cleanText(document.querySelector('.CardSet')?.textContent);
 
-      // Pokemon info section
-      const pokemonNumberEl = Array.from(document.querySelectorAll('h4')).find(
-        el => el.textContent?.includes('No.')
-      );
-      const number = cleanText(pokemonNumberEl?.textContent);
-      const type = cleanText(pokemonNumberEl?.nextElementSibling?.textContent);
-
-      // Size info
-      const sizeDiv = pokemonNumberEl?.nextElementSibling?.nextElementSibling;
-      const sizeText = cleanText(sizeDiv?.textContent);
-      const heightMatch = sizeText.match(/高さ：([\d.]+)\s*m/);
-      const weightMatch = sizeText.match(/重さ：([\d.]+)\s*kg/);
-      const height = heightMatch?.[1] || '';
-      const weight = weightMatch?.[1] || '';
-
-      // Description
-      const description = cleanText(sizeDiv?.nextElementSibling?.textContent);
-
-      // Illustrator
-      const illustrator = cleanText(
-        document.querySelector('h4:has(+ div)')?.nextElementSibling?.textContent
-      );
-
       // Pokemon type and HP
       const typeIcon = document.querySelector('.hp-type + .icon');
-      const pokemonType =
-        typeIcon?.className.match(/icon-(\w+)/)?.[1] || 'colorless';
+      const type = typeIcon?.className.match(/icon-(\w+)/)?.[1] || 'colorless';
       const hp = cleanText(document.querySelector('.hp-num')?.textContent);
 
       // Check for card effect (グッズ, etc.)
@@ -214,16 +154,8 @@ export async function GET(
       return {
         name,
         cardId,
-        pokemonInfo: {
-          number,
-          type,
-          height,
-          weight,
-        },
-        description,
-        illustrator,
-        pokemonType,
         hp,
+        type,
         cardEffect,
         abilities,
         moves,

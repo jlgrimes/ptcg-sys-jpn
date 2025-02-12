@@ -27,25 +27,17 @@ export interface Move {
 }
 
 export interface CardDetails {
-  name: string;
-  cardId: string;
-  pokemonInfo: {
-    number: string;
-    type: string;
-    height: string;
-    weight: string;
-  };
-  description: string;
-  illustrator: string;
-  pokemonType: string;
-  hp: string;
-  cardEffect?: string;
+  name: string; // バケッチャ
+  cardId: string; // XY4 043 / 088
+  hp: string; // HP 60
+  type: string; // dark
+  cardEffect?: string; // Effect text for trainer/energy cards
   abilities: Ability[];
   moves: Move[];
-  weakness: string;
-  resistance: string;
-  retreatCost: string;
-  evolution: string[];
-  set: string;
-  imageUrl: string;
+  weakness: string; // ×2
+  resistance: string; // －20
+  retreatCost: string; // empty in this case
+  evolution: string[]; // ["パンプジン", "バケッチャ"]
+  set: string; // ポケモンカードゲームXY 拡張パック「ファントムゲート」
+  imageUrl: string; // Add the image URL to the response
 }
