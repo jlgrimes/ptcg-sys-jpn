@@ -52,4 +52,23 @@ describe('Effect Parser', () => {
     const effects = await parseEffectText(text);
     expect(effects).toEqual(expectedEffects);
   });
+
+  it('should parse conditional damage effects correctly', async () => {
+    const text =
+      '前の自分の番に、このポケモンが「じゅうまんガス」を使っていたなら、120ダメージ追加。';
+    const effects = await parseEffectText(text);
+
+    expect(effects).toHaveLength(1);
+    expect(effects[0]).toMatchObject({
+      type: EffectType.Damage,
+      value: 120,
+      conditions: [
+        {
+          type: 'move-used',
+          move: 'じゅうまんガス',
+          timing: 'last-turn',
+        },
+      ],
+    });
+  });
 });

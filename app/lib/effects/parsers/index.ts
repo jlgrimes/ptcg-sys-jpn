@@ -16,6 +16,7 @@ import { MoveRestrictionParser } from './move-restriction-parser';
 import { BenchPlacementParser } from './bench-placement-parser';
 import { SwitchParser } from './switch-parser';
 import { HandToDeckParser } from './hand-to-deck-parser';
+import { MoveConditionParser } from './move-condition-parser';
 import { Logger } from '../../utils/logger';
 import { BaseEffectParser } from './utils/base-effect-parser';
 import { BaseEffect } from '../types';
@@ -75,6 +76,7 @@ class ParserRegistry {
 export const registry = new ParserRegistry();
 
 // Register parsers in priority order (higher number = higher priority)
+registry.register(MoveConditionParser, 900); // Highest priority for conditional moves
 registry.register(CountDamageParser, 800);
 registry.register(BenchDamageParser, 700);
 registry.register(DamageModifierParser, 600);

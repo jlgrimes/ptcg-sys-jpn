@@ -46,7 +46,13 @@ export interface Filter {
 }
 
 export interface Condition {
-  type: 'coin-flip' | 'card-count' | 'status' | 'location' | 'move-restriction';
+  type:
+    | 'coin-flip'
+    | 'card-count'
+    | 'status'
+    | 'location'
+    | 'move-restriction'
+    | 'move-used';
   value?: number;
   values?: number[];
   comparison?: 'equal' | 'not-equal';
@@ -54,6 +60,8 @@ export interface Condition {
   onSuccess?: Effect[];
   onFailure?: Effect[];
   moveName?: string;
+  move?: string;
+  timing?: 'last-turn' | 'next-turn';
   restriction?: 'cannot-use';
   duration?: 'next-turn';
 }
