@@ -34,7 +34,7 @@ export class DiscardParser extends BaseParser<Effect> {
             value: parseInt(drawMatch[1]),
             targets: [
               {
-                type: 'pokemon',
+                type: this.parseDrawTargetType(),
                 player: 'self',
                 location: { type: 'deck' },
               },
@@ -69,6 +69,12 @@ export class DiscardParser extends BaseParser<Effect> {
 
   protected parseTargetType(): 'pokemon' | 'card' | 'energy' | 'trainer' {
     // In Japanese, 枚 is used for cards, while 個 is more commonly used for other items
+    if (this.text.includes('エネルギー')) {
+      return 'energy';
+    }
+    if (this.text.includes('トレーナーズ')) {
+      return 'trainer';
+    }
     if (this.text.includes('枚')) {
       return 'card';
     }
@@ -76,9 +82,15 @@ export class DiscardParser extends BaseParser<Effect> {
   }
 
   protected parsePlayer(): 'self' | 'opponent' {
-    if (this.text.includes('相手')) {
-      return 'opponent';
+    return this.text.includes('相手') ? 'opponent' : 'self';
+  }
+
+  private parseDrawTargetType(): 'pokemon' | 'card' {
+    // Check if the text specifically mentions drawing Pokemon
+    if (this.text.includes('ポケモンを') && this.text.includes('引く')) {
+      return 'pokemon';
     }
-    return 'self';
+    // Default to card for general draw effects
+    return 'card';
   }
 }

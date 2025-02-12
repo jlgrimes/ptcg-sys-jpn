@@ -211,7 +211,7 @@ describe('Ability Effects', () => {
         type: EffectType.Draw,
         targets: [
           {
-            type: 'pokemon',
+            type: 'card',
             player: 'self',
             location: {
               type: 'deck',
@@ -225,7 +225,7 @@ describe('Ability Effects', () => {
           {
             type: 'card-count',
             target: {
-              type: 'pokemon',
+              type: 'card',
               player: 'self',
               location: {
                 type: 'hand',

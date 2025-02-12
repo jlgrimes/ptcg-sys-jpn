@@ -12,7 +12,7 @@ export class DrawParser extends BaseParser<Effect> {
     const effect = this.createEffect(EffectType.Draw, {
       targets: [
         {
-          type: 'pokemon',
+          type: this.parseTargetType(),
           player: 'self',
           location: {
             type: 'deck',
@@ -28,7 +28,7 @@ export class DrawParser extends BaseParser<Effect> {
         {
           type: 'card-count',
           target: {
-            type: 'pokemon',
+            type: this.parseTargetType(),
             player: 'self',
             location: {
               type: 'hand',
@@ -47,5 +47,14 @@ export class DrawParser extends BaseParser<Effect> {
     }
 
     return effect;
+  }
+
+  private parseTargetType(): 'pokemon' | 'card' {
+    // Check if the text specifically mentions drawing Pokemon
+    if (this.text.includes('ポケモン')) {
+      return 'pokemon';
+    }
+    // Default to card for general draw effects
+    return 'card';
   }
 }

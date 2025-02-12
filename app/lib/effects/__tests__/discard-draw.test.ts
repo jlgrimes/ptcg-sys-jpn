@@ -23,7 +23,7 @@ describe('Discard Draw Effects', () => {
         value: 2,
         targets: [
           {
-            type: 'pokemon',
+            type: 'card',
             player: 'self',
             location: {
               type: 'deck',
