@@ -123,10 +123,9 @@ export async function GET(
       );
 
       // Pokemon type and HP
-      const statsDiv = document.querySelector('.CardStatus');
-      const pokemonType = cleanText(
-        statsDiv?.querySelector('div:first-child')?.textContent
-      );
+      const typeIcon = document.querySelector('.hp-type + .icon');
+      const pokemonType =
+        typeIcon?.className.match(/icon-(\w+)/)?.[1] || 'colorless';
       const hp = cleanText(document.querySelector('.hp-num')?.textContent);
 
       // Check for card effect (グッズ, etc.)
