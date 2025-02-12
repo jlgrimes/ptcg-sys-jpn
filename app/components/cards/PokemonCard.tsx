@@ -59,6 +59,11 @@ function EffectDisplay({ effects }: { effects: Effect[] }) {
                     {i > 0 ? ', ' : ''}
                     {t.player}:{t.type}
                     {t.count && ` (${t.count})`}
+                    {t.location && (
+                      <span className='bg-blue-100 text-blue-800 text-[10px] px-1.5 py-0.5 rounded-full ml-1'>
+                        location: {t.location.type}
+                      </span>
+                    )}
                     {t.filters && t.filters.length > 0 && (
                       <span className='text-gray-600'>
                         {' '}
