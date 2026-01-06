@@ -21,6 +21,11 @@ import { Logger } from '../../utils/logger';
 import { BaseEffectParser } from './utils/base-effect-parser';
 import { BaseEffect } from '../types';
 import { CopyParser } from './copy-parser';
+// New parsers (Phase 3)
+import { HealParser } from './heal-parser';
+import { PreventionParser } from './prevention-parser';
+import { DeckManipulationParser } from './deck-manipulation-parser';
+import { TrainerBlockParser } from './trainer-block-parser';
 
 export type ParserConstructor = new (phrase: TokenizedPhrase) =>
   | BaseParser<BaseEffect>
@@ -82,8 +87,12 @@ registry.register(CountDamageParser, 800);
 registry.register(BenchDamageParser, 700);
 registry.register(CopyParser, 650); // High priority since it's a specific move-related action
 registry.register(DamageModifierParser, 600);
+registry.register(PreventionParser, 550); // Prevention before status (both can have 受けない)
 registry.register(StatusParser, 500);
+registry.register(TrainerBlockParser, 480); // Trainer blocking effects
+registry.register(HealParser, 460); // Healing effects
 registry.register(HandToDeckParser, 450);
+registry.register(DeckManipulationParser, 420); // Deck manipulation before energy
 registry.register(EnergyParser, 400);
 registry.register(BenchPlacementParser, 300); // Add before generic place/search
 registry.register(SwitchParser, 250); // Add between bench placement and place

@@ -1,10 +1,24 @@
 import * as kuromoji from 'kuromoji';
 import { Effect, Timing } from './effects/types';
 import { parseEffect } from './effects/parsers';
+import {
+  segmentEffectText,
+  hasMultipleEffects,
+  stripAnnotations,
+  extractAnnotations,
+  EffectSegment,
+} from './effects/parsers/sentence-segmenter';
 
 export interface TokenizedPhrase {
   text: string;
   tokens: kuromoji.IpadicFeatures[];
+  timing?: Timing;
+}
+
+export interface ParseResult {
+  effects: Effect[];
+  segments: EffectSegment[];
+  annotations: string[];
   timing?: Timing;
 }
 
@@ -41,25 +55,66 @@ function parseTiming(text: string): Timing | undefined {
 
 /**
  * Parses Japanese card effect text into structured Effect objects
+ * Uses sentence segmentation for multi-effect cards
  * @param text The Japanese card effect text to parse
  * @returns An array of parsed Effect objects
  * @throws EffectParseError if tokenization fails
  */
 export async function parseEffectText(text: string): Promise<Effect[]> {
+  const result = await parseEffectTextFull(text);
+  return result.effects;
+}
+
+/**
+ * Full parsing with additional metadata
+ */
+export async function parseEffectTextFull(text: string): Promise<ParseResult> {
   if (!text?.trim()) {
-    return [];
+    return { effects: [], segments: [], annotations: [] };
   }
 
   try {
     const tokenizer = await getTokenizer();
     const timing = parseTiming(text);
-    const tokens = tokenizer.tokenize(text);
+    const annotations = extractAnnotations(text);
 
-    return parseEffect({
-      text,
-      tokens,
+    // Segment the text for multi-effect handling
+    const segmentation = segmentEffectText(text);
+    const allEffects: Effect[] = [];
+
+    // Parse each non-annotation segment
+    const effectSegments = segmentation.segments.filter(s => !s.isAnnotation);
+
+    if (effectSegments.length <= 1) {
+      // Single effect - use original parsing
+      const cleanText = stripAnnotations(text);
+      const tokens = tokenizer.tokenize(cleanText);
+      const effects = parseEffect({ text: cleanText, tokens, timing });
+      return {
+        effects,
+        segments: segmentation.segments,
+        annotations,
+        timing,
+      };
+    }
+
+    // Multiple effects - parse each segment
+    for (const segment of effectSegments) {
+      const tokens = tokenizer.tokenize(segment.text);
+      const segmentEffects = parseEffect({
+        text: segment.text,
+        tokens,
+        timing: segment.relationship === 'independent' ? timing : undefined,
+      });
+      allEffects.push(...segmentEffects);
+    }
+
+    return {
+      effects: allEffects,
+      segments: segmentation.segments,
+      annotations,
       timing,
-    });
+    };
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : String(error);
     throw new EffectParseError(`Failed to parse effect text: ${message}`, text);

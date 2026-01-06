@@ -1,4 +1,5 @@
 export enum EffectType {
+  // Core effects
   Damage = 'damage',
   Draw = 'draw',
   Search = 'search',
@@ -13,6 +14,27 @@ export enum EffectType {
   Shuffle = 'shuffle',
   Switch = 'switch',
   Copy = 'copy',
+
+  // New effect types (Phase 3)
+  Heal = 'heal',
+  Prevention = 'prevention',
+  DeckManipulation = 'deck-manipulation',
+  TrainerBlock = 'trainer-block',
+  RetreatModifier = 'retreat-modifier',
+  Prize = 'prize',
+  BenchSize = 'bench-size',
+  TypeChange = 'type-change',
+  Devolution = 'devolution',
+  Choice = 'choice',
+  Reveal = 'reveal',
+  Counter = 'counter', // Place damage counters
+
+  // Legacy mechanics
+  PokemonPower = 'pokemon-power',
+  PokePower = 'poke-power',
+  PokeBody = 'poke-body',
+  GxAttack = 'gx-attack',
+  VstarPower = 'vstar-power',
 }
 
 // Core types
@@ -57,10 +79,23 @@ export interface Condition {
     | 'location'
     | 'move-restriction'
     | 'move-used'
-    | 'evolution';
+    | 'evolution'
+    // New condition types
+    | 'has-energy'
+    | 'has-damage'
+    | 'prize-count'
+    | 'bench-count'
+    | 'pokemon-type'
+    | 'turn-count'
+    | 'hp-remaining'
+    | 'is-ex'
+    | 'is-gx'
+    | 'is-v'
+    | 'is-basic'
+    | 'name-contains';
   value?: number;
   values?: number[];
-  comparison?: 'equal' | 'not-equal';
+  comparison?: 'equal' | 'not-equal' | 'less-than' | 'greater-than' | 'less-than-or-equal' | 'greater-than-or-equal';
   target?: Target;
   onSuccess?: Effect[];
   onFailure?: Effect[];
@@ -68,7 +103,10 @@ export interface Condition {
   move?: string;
   timing?: 'last-turn' | 'next-turn' | 'on-play';
   restriction?: 'cannot-use';
-  duration?: 'next-turn';
+  duration?: 'next-turn' | 'until-end-of-turn' | 'until-leaves-play';
+  energyType?: string; // For has-energy condition
+  pokemonType?: string; // For pokemon-type condition
+  namePattern?: string; // For name-contains condition
 }
 
 export interface Modifier {
@@ -148,6 +186,60 @@ export interface CopyEffect extends BaseEffect {
   filters?: Filter[]; // Any filters on what can be copied (e.g. specific Pokemon name)
   what: 'move'; // What we're copying (for future extensibility)
   count?: number; // How many to choose from, if specified
+}
+
+// New effect types (Phase 3)
+export interface HealEffect extends BaseEffect {
+  type: EffectType.Heal;
+  value: number; // HP to heal or damage counters to remove
+  unit: 'hp' | 'damage-counters'; // Whether value is HP or damage counter count
+}
+
+export interface PreventionEffect extends BaseEffect {
+  type: EffectType.Prevention;
+  preventType: 'damage' | 'effects' | 'all';
+  duration: 'next-attack' | 'next-turn' | 'while-active';
+  reduction?: number; // For partial prevention (e.g., -30 damage)
+}
+
+export interface DeckManipulationEffect extends BaseEffect {
+  type: EffectType.DeckManipulation;
+  action: 'look' | 'rearrange' | 'put-on-top' | 'put-on-bottom' | 'shuffle-into';
+  count?: number; // Number of cards to look at/manipulate
+}
+
+export interface TrainerBlockEffect extends BaseEffect {
+  type: EffectType.TrainerBlock;
+  blockType: 'goods' | 'supporter' | 'stadium' | 'tool' | 'all-trainers';
+  duration: 'next-turn' | 'while-active';
+}
+
+export interface RetreatModifierEffect extends BaseEffect {
+  type: EffectType.RetreatModifier;
+  modification: number; // Positive = increase cost, negative = decrease
+}
+
+export interface PrizeEffect extends BaseEffect {
+  type: EffectType.Prize;
+  action: 'take-extra' | 'look' | 'swap' | 'put-back';
+  count?: number;
+}
+
+export interface RevealEffect extends BaseEffect {
+  type: EffectType.Reveal;
+  revealTo: 'self' | 'opponent' | 'both';
+}
+
+export interface CounterEffect extends BaseEffect {
+  type: EffectType.Counter;
+  value: number; // Number of damage counters
+  action: 'place' | 'move' | 'remove';
+}
+
+export interface ChoiceEffect extends BaseEffect {
+  type: EffectType.Choice;
+  options: Effect[][]; // Array of effect sequences to choose from
+  choiceCount: number; // How many options to choose (usually 1)
 }
 
 export type Effect = BaseEffect;
