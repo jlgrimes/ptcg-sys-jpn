@@ -3,8 +3,15 @@ import { Suspense } from 'react';
 import { parseEffectText } from '@/app/lib/effect-parser';
 import { Effect, Target } from '@/app/lib/effects/types';
 
+function getBaseUrl() {
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`;
+  }
+  return `http://localhost:${process.env.PORT || 3000}`;
+}
+
 async function getCard(id: number) {
-  const res = await fetch(`http://localhost:3001/api/pokemon-card/${id}`, {
+  const res = await fetch(`${getBaseUrl()}/api/pokemon-card/${id}`, {
     // cache: 'force-cache',
   });
 
