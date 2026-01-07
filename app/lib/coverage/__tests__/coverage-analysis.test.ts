@@ -1,5 +1,7 @@
 import { CardScraper } from '../card-scraper';
 import { parseEffectText } from '../../effect-parser';
+import { loadAllCards, saveCards, getCorpusStats } from '../corpus-store';
+import { CardCorpusEntry } from '../types';
 
 interface FailedEffect {
   cardId: string;
@@ -56,9 +58,9 @@ describe('Extensive Coverage Analysis', () => {
     await scraper.close();
   });
 
-  it('should analyze coverage across 50 cards', async () => {
-    const startId = 47100;
-    const endId = 47150;
+  it('should analyze coverage across 200 cards', async () => {
+    const startId = 47000;
+    const endId = 47200;
 
     const failed: FailedEffect[] = [];
     const passed: Array<{ cardName: string; text: string; effectCount: number }> = [];
@@ -135,9 +137,89 @@ describe('Extensive Coverage Analysis', () => {
       console.log(`  Patterns: ${f.patterns.length > 0 ? f.patterns.join(', ') : 'unknown'}`);
     }
 
-    // Expect decent coverage
-    expect(passed.length / totalEffects).toBeGreaterThan(0.5);
-  }, 300000); // 5 minute timeout for scraping
+    // Expect high coverage
+    expect(passed.length / totalEffects).toBeGreaterThan(0.8);
+  }, 600000); // 10 minute timeout for scraping
+});
+
+describe('Coverage Analysis from Local Cache', () => {
+  it('should analyze coverage from cached cards', async () => {
+    const cards = loadAllCards();
+
+    if (cards.length === 0) {
+      console.log('No cached cards found. Run `npm run scrape:200` first.');
+      return;
+    }
+
+    const failed: FailedEffect[] = [];
+    const passed: Array<{ cardName: string; text: string; effectCount: number }> = [];
+    let totalEffects = 0;
+
+    for (const card of cards) {
+      for (const effect of card.effects) {
+        totalEffects++;
+        const parsed = await parseEffectText(effect.text);
+
+        if (parsed.length > 0) {
+          passed.push({
+            cardName: card.name,
+            text: effect.text,
+            effectCount: parsed.length,
+          });
+        } else {
+          failed.push({
+            cardId: card.id,
+            cardName: card.name,
+            source: effect.source,
+            text: effect.text,
+            patterns: detectPatterns(effect.text),
+          });
+        }
+      }
+    }
+
+    // Summary
+    console.log('\n' + '='.repeat(60));
+    console.log('COVERAGE ANALYSIS REPORT (FROM CACHE)');
+    console.log('='.repeat(60));
+    console.log(`Cards in cache: ${cards.length}`);
+    console.log(`Total effects: ${totalEffects}`);
+    console.log(`Parsed: ${passed.length} (${((passed.length / totalEffects) * 100).toFixed(1)}%)`);
+    console.log(`Failed: ${failed.length} (${((failed.length / totalEffects) * 100).toFixed(1)}%)`);
+
+    // Pattern analysis
+    const patternCounts: Record<string, number> = {};
+    for (const f of failed) {
+      for (const p of f.patterns) {
+        patternCounts[p] = (patternCounts[p] || 0) + 1;
+      }
+      if (f.patterns.length === 0) {
+        patternCounts['unknown'] = (patternCounts['unknown'] || 0) + 1;
+      }
+    }
+
+    console.log('\n' + '-'.repeat(60));
+    console.log('FAILED PATTERNS (sorted by frequency)');
+    console.log('-'.repeat(60));
+    const sortedPatterns = Object.entries(patternCounts)
+      .sort((a, b) => b[1] - a[1]);
+    for (const [pattern, count] of sortedPatterns) {
+      console.log(`  ${pattern}: ${count}`);
+    }
+
+    console.log('\n' + '-'.repeat(60));
+    console.log('FAILED EFFECTS (with detected patterns)');
+    console.log('-'.repeat(60));
+    for (const f of failed) {
+      console.log(`\n[${f.cardName}] (${f.source})`);
+      console.log(`  Text: ${f.text.slice(0, 100)}${f.text.length > 100 ? '...' : ''}`);
+      console.log(`  Patterns: ${f.patterns.length > 0 ? f.patterns.join(', ') : 'unknown'}`);
+    }
+
+    if (totalEffects > 0) {
+      expect(passed.length / totalEffects).toBeGreaterThan(0.8);
+    }
+  }, 60000);
 });
 
 describe('Quick Parser Tests on Failing Patterns', () => {

@@ -19,10 +19,10 @@ enum EnergyType {
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const cardId = params.id;
+    const { id: cardId } = await params;
     const url = `https://www.pokemon-card.com/card-search/details.php/card/${cardId}`;
 
     const browser = await puppeteer.launch({
