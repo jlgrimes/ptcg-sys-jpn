@@ -11,10 +11,14 @@ import { Effect, EffectType, PreventionEffect, Target } from '../types';
  */
 export class PreventionParser extends BaseParser<PreventionEffect> {
   canParse(): boolean {
+    // Be specific about prevention patterns - don't match ability immunity
     return (
-      this.text.includes('受けない') ||
-      this.text.includes('防ぐ') ||
-      (this.text.includes('ダメージ') && this.text.includes('する') && this.text.match(/-\d+/))
+      this.text.includes('ダメージを受けない') ||
+      this.text.includes('ダメージは受けない') ||
+      (this.text.includes('ワザの効果') && this.text.includes('受けない')) ||
+      (this.text.includes('すべて') && this.text.includes('防ぐ')) ||
+      (this.text.includes('ダメージ') && this.text.includes('する') && !!this.text.match(/-\d+/)) ||
+      this.text.match(/受ける.*ダメージ[をは]「?-\d+/) !== null
     );
   }
 

@@ -26,6 +26,13 @@ import { HealParser } from './heal-parser';
 import { PreventionParser } from './prevention-parser';
 import { DeckManipulationParser } from './deck-manipulation-parser';
 import { TrainerBlockParser } from './trainer-block-parser';
+// Additional parsers (Phase 3b)
+import { PrizeParser } from './prize-parser';
+import { RetreatModifierParser } from './retreat-modifier-parser';
+import { DamageBonusParser } from './damage-bonus-parser';
+import { SpecialPlayParser } from './special-play-parser';
+import { DevolutionParser } from './devolution-parser';
+import { CounterParser } from './counter-parser';
 
 export type ParserConstructor = new (phrase: TokenizedPhrase) =>
   | BaseParser<BaseEffect>
@@ -91,9 +98,11 @@ registry.register(PreventionParser, 550); // Prevention before status (both can 
 registry.register(StatusParser, 500);
 registry.register(TrainerBlockParser, 480); // Trainer blocking effects
 registry.register(HealParser, 460); // Healing effects
+registry.register(CounterParser, 455); // Damage counter placement
 registry.register(HandToDeckParser, 450);
 registry.register(DeckManipulationParser, 420); // Deck manipulation before energy
 registry.register(EnergyParser, 400);
+registry.register(SpecialPlayParser, 320); // Special play/evolution conditions - before generic place
 registry.register(BenchPlacementParser, 300); // Add before generic place/search
 registry.register(SwitchParser, 250); // Add between bench placement and place
 registry.register(PlaceParser, 200);
@@ -101,6 +110,10 @@ registry.register(SearchParser, 100);
 registry.register(DiscardParser, 50);
 registry.register(DrawParser, 40);
 registry.register(ConditionParser, 30);
+registry.register(PrizeParser, 25); // Prize manipulation
+registry.register(RetreatModifierParser, 20); // Retreat cost modification
+registry.register(DamageBonusParser, 15); // Damage bonuses like +30
+registry.register(DevolutionParser, 11); // Devolution effects
 registry.register(DamageParser, 10); // Most generic damage parser last
 registry.register(MoveRestrictionParser, 5); // Move restriction should be last
 

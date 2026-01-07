@@ -7,6 +7,7 @@ describe('Status Effects', () => {
     const expectedEffects = [
       {
         type: EffectType.Status,
+        status: 'paralyzed',
         targets: [
           {
             type: 'pokemon',
@@ -24,6 +25,15 @@ describe('Status Effects', () => {
               {
                 type: EffectType.Status,
                 status: 'paralyzed',
+                targets: [
+                  {
+                    type: 'pokemon',
+                    player: 'opponent',
+                    location: {
+                      type: 'active',
+                    },
+                  },
+                ],
               },
             ],
           },

@@ -21,8 +21,8 @@ export class HealParser extends BaseParser<HealEffect> {
   parse(): HealEffect | null {
     if (!this.canParse()) return null;
 
-    // HP healing pattern: HPを30回復 or 30回復
-    const hpMatch = this.text.match(/(?:HPを)?(\d+)回復/);
+    // HP healing pattern: HPを30回復 or 30回復 or 「100」回復
+    const hpMatch = this.text.match(/(?:HPを)?[「]?(\d+)[」]?回復/);
     if (hpMatch) {
       return this.createHealEffect(parseInt(hpMatch[1], 10), 'hp');
     }

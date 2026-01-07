@@ -27,7 +27,7 @@ export class DeckManipulationParser extends BaseParser<DeckManipulationEffect> {
     return false;
   }
 
-  parse(): DeckManipulationEffect | Effect[] | null {
+  parse(): DeckManipulationEffect | DeckManipulationEffect[] | null {
     if (!this.canParse()) return null;
 
     // Look at deck: 山札を上から3枚見る

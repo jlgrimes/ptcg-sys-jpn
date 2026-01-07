@@ -86,10 +86,11 @@ export async function parseEffectTextFull(text: string): Promise<ParseResult> {
     const effectSegments = segmentation.segments.filter(s => !s.isAnnotation);
 
     if (effectSegments.length <= 1) {
-      // Single effect - use original parsing
-      const cleanText = stripAnnotations(text);
-      const tokens = tokenizer.tokenize(cleanText);
-      const effects = parseEffect({ text: cleanText, tokens, timing });
+      // Single effect - use FULL text including annotations
+      // Annotations like ［ベンチは弱点・抵抗力を計算しない。］ contain modifiers
+      // that parsers need to extract
+      const tokens = tokenizer.tokenize(text);
+      const effects = parseEffect({ text, tokens, timing });
       return {
         effects,
         segments: segmentation.segments,
