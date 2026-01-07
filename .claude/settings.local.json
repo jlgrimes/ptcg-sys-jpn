@@ -14,7 +14,8 @@
       "Bash(npx jest:*)",
       "Bash(cat:*)",
       "Bash(npm run scrape:200:*)",
-      "Bash(timeout 30 npm run dev:*)"
+      "Bash(timeout 30 npm run dev:*)",
+      "Bash(npm run lint)"
     ]
   }
 }

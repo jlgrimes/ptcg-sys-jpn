@@ -187,7 +187,7 @@ export function CardDisplay({
                 'max-w-full'
               )}
             >
-              {pokemonState.attachedEnergy.slice(0, 4).map((energy, i) => (
+              {pokemonState.attachedEnergy.slice(0, 4).map((energy) => (
                 <div
                   key={energy.id}
                   className={cn(
