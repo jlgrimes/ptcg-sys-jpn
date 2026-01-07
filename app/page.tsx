@@ -1,5 +1,8 @@
 import PokemonCardList from './components/cards/PokemonCardList';
 
+// Disable static generation - this page fetches external data
+export const dynamic = 'force-dynamic';
+
 export default function Home() {
   return (
     <main className='min-h-screen p-4'>

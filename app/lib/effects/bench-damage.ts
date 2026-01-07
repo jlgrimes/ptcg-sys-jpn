@@ -1,9 +1,11 @@
-import { Effect, EffectType } from '../effect-parser';
+import { Effect } from '../effect-parser';
 import type { TokenizedPhrase } from '../effect-parser';
+import { EffectType } from './types';
 
 export interface BenchDamageEffect extends Effect {
   type: EffectType.Damage;
   value: number;
+  target: 'self' | 'opponent';
   location: 'bench';
   count: number | 'all';
   ignoreWeaknessResistance: boolean;

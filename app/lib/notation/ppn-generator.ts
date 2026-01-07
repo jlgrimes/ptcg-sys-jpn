@@ -8,6 +8,7 @@ import {
   PPNSetup,
   PPNTurn,
   PPNAction,
+  PPNBaseAction,
   PPNDrawAction,
   PPNAttachAction,
   PPNEvolveAction,
@@ -155,7 +156,7 @@ export class PPNGenerator {
       case 'pass':
         return 'Pass';
       default:
-        return `Unknown(${action.type})`;
+        return `Unknown(${(action as PPNBaseAction).type})`;
     }
   }
 

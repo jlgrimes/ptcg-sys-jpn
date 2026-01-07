@@ -1,5 +1,6 @@
-import { Effect, EffectType } from '../effect-parser';
+import { Effect } from '../effect-parser';
 import type { TokenizedPhrase } from '../effect-parser';
+import { EffectType } from './types';
 
 interface DamageModifier {
   type: 'ignore' | 'double' | 'half';

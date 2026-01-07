@@ -40,6 +40,7 @@ export enum EffectType {
 // Core types
 export interface BaseEffect {
   type: EffectType;
+  target?: 'self' | 'opponent'; // Simple target for single-target effects
   targets?: Target[];
   conditions?: Condition[];
   modifiers?: Modifier[];
@@ -47,7 +48,32 @@ export interface BaseEffect {
   value?: number;
   status?: 'paralyzed' | 'asleep' | 'confused' | 'burned' | 'poisoned';
   what?: 'move' | 'ability'; // Used by copy effects to specify what is being copied
-  count?: number; // Used by copy effects to specify how many to choose from
+  count?: number | 'all'; // Used by copy effects to specify how many to choose from
+  // Additional commonly used properties
+  destination?: string;
+  selection?: 'choose' | 'random' | 'all';
+  shuffle?: boolean;
+  location?: string;
+  source?: string;
+  action?: string;
+  cardType?: string;
+  energyType?: string;
+  ignoreWeaknessResistance?: boolean;
+  isUpTo?: boolean; // Flag for "up to X" pattern (まで)
+  multiplier?: unknown;
+  revealLocation?: string;
+  targetCount?: number | 'all';
+  modifier?: unknown;
+  moveName?: string;
+  abilityName?: string;
+  duration?: string;
+  blockType?: string;
+  preventType?: string;
+  restriction?: string;
+  coinFlip?: unknown;
+  onHeads?: unknown;
+  player?: string;
+  revealTo?: string;
 }
 
 export interface Target {

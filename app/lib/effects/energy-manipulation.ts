@@ -1,5 +1,6 @@
-import { Effect, EffectType } from '../effect-parser';
+import { Effect } from '../effect-parser';
 import type { TokenizedPhrase } from '../effect-parser';
+import { EffectType } from './types';
 
 export interface EnergyEffect extends Effect {
   type: EffectType.Energy;
@@ -9,7 +10,7 @@ export interface EnergyEffect extends Effect {
   count: number;
   selection: 'choose' | 'random' | 'all';
   energyType?: 'basic' | 'special';
-  maxCount?: boolean;
+  isUpTo?: boolean;
   targetCount?: number;
 }
 
@@ -66,7 +67,7 @@ export function parseEnergyManipulation(
 
   // Check for "up to X" pattern
   if (text.includes('まで')) {
-    effect.maxCount = true;
+    effect.isUpTo = true;
   }
 
   // Check for target count
