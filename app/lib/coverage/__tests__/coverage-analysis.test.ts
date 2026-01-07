@@ -2,6 +2,7 @@ import { CardScraper } from '../card-scraper';
 import { parseEffectText } from '../../effect-parser';
 import { loadAllCards, saveCards, getCorpusStats } from '../corpus-store';
 import { CardCorpusEntry } from '../types';
+import { SUPPORTED_CARDS } from '../../constants';
 
 interface FailedEffect {
   cardId: string;
@@ -58,9 +59,9 @@ describe('Extensive Coverage Analysis', () => {
     await scraper.close();
   });
 
-  it('should analyze coverage across 200 cards', async () => {
-    const startId = 47000;
-    const endId = 47200;
+  it('should analyze coverage across supported cards', async () => {
+    const startId = SUPPORTED_CARDS.START_ID;
+    const endId = SUPPORTED_CARDS.END_ID;
 
     const failed: FailedEffect[] = [];
     const passed: Array<{ cardName: string; text: string; effectCount: number }> = [];

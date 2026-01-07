@@ -16,7 +16,8 @@
       "Bash(npm run scrape:200:*)",
       "Bash(timeout 30 npm run dev:*)",
       "Bash(npm run lint)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(npx tsx:*)"
     ]
   }
 }

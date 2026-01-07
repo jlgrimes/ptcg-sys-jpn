@@ -2,18 +2,23 @@
  * CLI script to scrape Pokemon card images and upload to Vercel Blob
  *
  * Usage:
- *   npx ts-node scripts/scrape-card-images.ts --range 47000-47200
- *   npx ts-node scripts/scrape-card-images.ts --from-corpus
- *   npx ts-node scripts/scrape-card-images.ts --ids 47001,47002,47003
+ *   npx tsx scripts/scrape-card-images.ts --supported       # Use supported card range
+ *   npx tsx scripts/scrape-card-images.ts --range 47000-47200
+ *   npx tsx scripts/scrape-card-images.ts --from-corpus
+ *   npx tsx scripts/scrape-card-images.ts --ids 47001,47002,47003
  *
  * Environment:
  *   BLOB_READ_WRITE_TOKEN - Vercel Blob token (required)
  */
 
+import { config } from 'dotenv';
+config({ path: '.env.local' });
+
 import puppeteer, { Browser } from 'puppeteer';
 import * as fs from 'fs';
 import * as path from 'path';
 import { put } from '@vercel/blob';
+import { SUPPORTED_CARDS, getSupportedCardIds } from '../app/lib/constants';
 
 const BASE_URL = 'https://www.pokemon-card.com';
 const DATA_DIR = path.join(process.cwd(), 'data');
@@ -112,7 +117,9 @@ async function main() {
 
   // Parse arguments
   for (let i = 0; i < args.length; i++) {
-    if (args[i] === '--range' && args[i + 1]) {
+    if (args[i] === '--supported') {
+      cardIds = getSupportedCardIds();
+    } else if (args[i] === '--range' && args[i + 1]) {
       const [start, end] = args[i + 1].split('-').map(n => parseInt(n, 10));
       for (let id = start; id <= end; id++) {
         cardIds.push(String(id));
@@ -130,9 +137,10 @@ async function main() {
 
   if (cardIds.length === 0) {
     console.log('Usage:');
-    console.log('  npx ts-node scripts/scrape-card-images.ts --range 47000-47200');
-    console.log('  npx ts-node scripts/scrape-card-images.ts --from-corpus');
-    console.log('  npx ts-node scripts/scrape-card-images.ts --ids 47001,47002,47003');
+    console.log(`  npx tsx scripts/scrape-card-images.ts --supported              # Cards ${SUPPORTED_CARDS.START_ID}-${SUPPORTED_CARDS.END_ID}`);
+    console.log('  npx tsx scripts/scrape-card-images.ts --range 47000-47200');
+    console.log('  npx tsx scripts/scrape-card-images.ts --from-corpus');
+    console.log('  npx tsx scripts/scrape-card-images.ts --ids 47001,47002,47003');
     console.log('');
     console.log('Options:');
     console.log('  --force    Re-upload images that already exist in the map');
