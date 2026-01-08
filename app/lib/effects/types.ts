@@ -268,4 +268,24 @@ export interface ChoiceEffect extends BaseEffect {
   choiceCount: number; // How many options to choose (usually 1)
 }
 
-export type Effect = BaseEffect;
+export type Effect =
+  | DamageEffect
+  | DrawEffect
+  | SearchEffect
+  | DiscardEffect
+  | AbilityEffect
+  | StatusEffect
+  | EnergyEffect
+  | PlaceEffect
+  | SwitchEffect
+  | CopyEffect
+  | HealEffect
+  | PreventionEffect
+  | DeckManipulationEffect
+  | TrainerBlockEffect
+  | RetreatModifierEffect
+  | PrizeEffect
+  | RevealEffect
+  | CounterEffect
+  | ChoiceEffect
+  | BaseEffect; // Fallback for Shuffle, Restriction, Condition, MoveFailure, BenchSize, TypeChange, Devolution, legacy mechanics

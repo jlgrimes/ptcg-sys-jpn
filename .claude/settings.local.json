@@ -20,7 +20,13 @@
       "Bash(npx tsx:*)",
       "Bash(npx prisma init:*)",
       "Bash(npx prisma generate:*)",
-      "Bash(node_modules/.bin/jest:*)"
+      "Bash(node_modules/.bin/jest:*)",
+      "Bash(npm run typecheck:*)",
+      "Bash(/c/Program Files/nodejs/npx.cmd tsc --noEmit)",
+      "Bash(where.exe:*)",
+      "Bash(node --version:*)",
+      "Bash(cmd.exe /c \"cd /d c:\\\\Users\\\\Jared\\\\code\\\\ptcg-sys-jpn && npx tsc --noEmit\")",
+      "Bash(cmd.exe /c \"cd /d c:\\\\Users\\\\Jared\\\\code\\\\ptcg-sys-jpn && nvm use && npx tsc --noEmit\")"
     ]
   }
 }

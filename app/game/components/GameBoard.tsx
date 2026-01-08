@@ -2,19 +2,44 @@
 
 import { GameState, CardInstance } from '@/app/lib/notation/training-format';
 import { cn } from '@/lib/utils';
-import { PlayerField, playerFieldFromState, opponentFieldFromState } from './PlayerField';
+import {
+  PlayerField,
+  playerFieldFromState,
+  opponentFieldFromState,
+  FieldCallbacks,
+  SelectionState,
+} from './PlayerField';
 import { SimpleCardDisplay } from './CardDisplay';
 import { ZoneLabel } from './CardSlot';
 
+/**
+ * Callbacks for game board interactions
+ */
+export interface GameBoardCallbacks {
+  player?: FieldCallbacks;
+  opponent?: FieldCallbacks;
+  onStadiumClick?: () => void;
+}
+
+/**
+ * Selection state for both players
+ */
+export interface GameBoardSelection {
+  player?: SelectionState;
+  opponent?: SelectionState;
+}
+
 interface GameBoardProps {
   gameState: GameState;
+  callbacks?: GameBoardCallbacks;
+  selection?: GameBoardSelection;
   className?: string;
 }
 
 /**
  * Full game board displaying both players' fields
  */
-export function GameBoard({ gameState, className }: GameBoardProps) {
+export function GameBoard({ gameState, callbacks, selection, className }: GameBoardProps) {
   const playerProps = playerFieldFromState(gameState);
   const opponentProps = opponentFieldFromState(gameState);
 
@@ -33,15 +58,19 @@ export function GameBoard({ gameState, className }: GameBoardProps) {
       <PlayerField
         perspective="opponent"
         {...opponentProps}
+        callbacks={callbacks?.opponent}
+        selection={selection?.opponent}
       />
 
       {/* Stadium Zone (middle) */}
-      <StadiumZone stadium={gameState.stadium} />
+      <StadiumZone stadium={gameState.stadium} onStadiumClick={callbacks?.onStadiumClick} />
 
       {/* Player's Field (bottom) */}
       <PlayerField
         perspective="player"
         {...playerProps}
+        callbacks={callbacks?.player}
+        selection={selection?.player}
       />
     </div>
   );
@@ -116,12 +145,29 @@ function ActionIndicator({
 /**
  * Stadium zone in the center of the board
  */
-function StadiumZone({ stadium }: { stadium: CardInstance | null }) {
+function StadiumZone({
+  stadium,
+  onStadiumClick,
+}: {
+  stadium: CardInstance | null;
+  onStadiumClick?: () => void;
+}) {
   return (
     <div className="flex items-center justify-center py-4">
       <div className="flex flex-col items-center">
         <ZoneLabel>Stadium</ZoneLabel>
-        <div className="mt-2">
+        <div
+          className={cn('mt-2', onStadiumClick && 'cursor-pointer hover:scale-105 transition-transform')}
+          onClick={onStadiumClick}
+          role={onStadiumClick ? 'button' : undefined}
+          tabIndex={onStadiumClick ? 0 : undefined}
+          onKeyDown={onStadiumClick ? (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              onStadiumClick();
+            }
+          } : undefined}
+        >
           {stadium ? (
             <div className="relative">
               <SimpleCardDisplay card={stadium} size="md" />

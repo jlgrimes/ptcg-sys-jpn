@@ -8,6 +8,10 @@ interface CardSlotProps {
   label?: string;
   isEmpty?: boolean;
   highlighted?: boolean;
+  selected?: boolean;
+  selectable?: boolean;
+  disabled?: boolean;
+  onClick?: () => void;
   className?: string;
   size?: 'sm' | 'md' | 'lg';
 }
@@ -26,20 +30,39 @@ export function CardSlot({
   label,
   isEmpty = false,
   highlighted = false,
+  selected = false,
+  selectable = false,
+  disabled = false,
+  onClick,
   className,
   size = 'md',
 }: CardSlotProps) {
+  const isClickable = onClick && !disabled;
+
   return (
     <div className={cn('relative', className)}>
       {/* Slot container */}
       <div
+        role={isClickable ? 'button' : undefined}
+        tabIndex={isClickable ? 0 : undefined}
+        onClick={isClickable ? onClick : undefined}
+        onKeyDown={isClickable ? (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onClick?.();
+          }
+        } : undefined}
         className={cn(
           sizeClasses[size],
           'rounded-lg transition-all',
           isEmpty
             ? 'border-2 border-dashed border-gray-300 bg-gray-50/50'
             : 'border-2 border-transparent',
-          highlighted && 'ring-2 ring-yellow-400 ring-offset-2'
+          highlighted && 'ring-2 ring-yellow-400 ring-offset-2',
+          selected && 'ring-2 ring-blue-500 ring-offset-2 bg-blue-50',
+          selectable && !selected && !disabled && 'ring-2 ring-green-400/50 ring-offset-1 cursor-pointer hover:ring-green-500',
+          isClickable && 'cursor-pointer hover:scale-105',
+          disabled && 'opacity-50 cursor-not-allowed'
         )}
       >
         {children}

@@ -5,6 +5,29 @@ import { cn } from '@/lib/utils';
 import { CardDisplay, SimpleCardDisplay } from './CardDisplay';
 import { CardSlot, ZoneLabel } from './CardSlot';
 
+/**
+ * Callbacks for interacting with field elements
+ */
+export interface FieldCallbacks {
+  onActiveClick?: () => void;
+  onBenchClick?: (index: number) => void;
+  onHandCardClick?: (cardId: string) => void;
+  onDeckClick?: () => void;
+  onDiscardClick?: () => void;
+}
+
+/**
+ * Selection state for highlighting selectable options
+ */
+export interface SelectionState {
+  selectableActive?: boolean;
+  selectableBench?: boolean[];
+  selectableHand?: string[];
+  selectedActive?: boolean;
+  selectedBench?: number[];
+  selectedHand?: string[];
+}
+
 interface PlayerFieldProps {
   // Player's own view or opponent's observable state
   perspective: 'player' | 'opponent';
@@ -23,6 +46,10 @@ interface PlayerFieldProps {
   // Optional: flipped layout for opponent
   flipped?: boolean;
   className?: string;
+  // Interaction callbacks
+  callbacks?: FieldCallbacks;
+  // Selection state for choices
+  selection?: SelectionState;
 }
 
 /**
@@ -39,6 +66,8 @@ export function PlayerField({
   prizesRemaining,
   flipped = false,
   className,
+  callbacks,
+  selection,
 }: PlayerFieldProps) {
   const isOpponent = perspective === 'opponent';
   const displayHandSize = hand?.length ?? handSize ?? 0;
@@ -87,7 +116,13 @@ export function PlayerField({
           {/* Active Pokemon */}
           <div className="flex flex-col items-center">
             <span className="text-xs text-gray-500 mb-1">Active</span>
-            <CardSlot isEmpty={!active} size="md">
+            <CardSlot
+              isEmpty={!active}
+              size="md"
+              onClick={callbacks?.onActiveClick}
+              selectable={selection?.selectableActive}
+              selected={selection?.selectedActive}
+            >
               {active && (
                 <CardDisplay
                   card={active.card}
@@ -103,7 +138,15 @@ export function PlayerField({
             <span className="text-xs text-gray-500 mb-1">Bench</span>
             <div className="flex gap-2">
               {bench.map((pokemon, i) => (
-                <CardSlot key={i} isEmpty={!pokemon} size="sm" label={`B${i + 1}`}>
+                <CardSlot
+                  key={i}
+                  isEmpty={!pokemon}
+                  size="sm"
+                  label={`B${i + 1}`}
+                  onClick={pokemon && callbacks?.onBenchClick ? () => callbacks.onBenchClick?.(i) : undefined}
+                  selectable={selection?.selectableBench?.[i]}
+                  selected={selection?.selectedBench?.includes(i)}
+                >
                   {pokemon && (
                     <CardDisplay
                       card={pokemon.card}
@@ -164,9 +207,32 @@ export function PlayerField({
         {!isOpponent && hand ? (
           // Player's hand - show all cards
           <div className="flex gap-1 flex-wrap">
-            {hand.map((card) => (
-              <SimpleCardDisplay key={card.id} card={card} size="sm" />
-            ))}
+            {hand.map((card) => {
+              const isSelectable = selection?.selectableHand?.includes(card.id);
+              const isSelected = selection?.selectedHand?.includes(card.id);
+              return (
+                <div
+                  key={card.id}
+                  role={callbacks?.onHandCardClick ? 'button' : undefined}
+                  tabIndex={callbacks?.onHandCardClick ? 0 : undefined}
+                  onClick={callbacks?.onHandCardClick ? () => callbacks.onHandCardClick?.(card.id) : undefined}
+                  onKeyDown={callbacks?.onHandCardClick ? (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      callbacks?.onHandCardClick?.(card.id);
+                    }
+                  } : undefined}
+                  className={cn(
+                    'transition-all rounded-lg',
+                    callbacks?.onHandCardClick && 'cursor-pointer hover:scale-105',
+                    isSelectable && !isSelected && 'ring-2 ring-green-400/50 ring-offset-1',
+                    isSelected && 'ring-2 ring-blue-500 ring-offset-2'
+                  )}
+                >
+                  <SimpleCardDisplay card={card} size="sm" />
+                </div>
+              );
+            })}
           </div>
         ) : (
           // Opponent's hand - show face-down cards

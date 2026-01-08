@@ -117,7 +117,7 @@ export interface ExecutionResult {
  * Log entry for what happened during execution
  */
 export interface ExecutionMessage {
-  type: 'info' | 'damage' | 'heal' | 'status' | 'draw' | 'discard' | 'search' | 'switch' | 'energy' | 'knockout' | 'counter';
+  type: 'info' | 'damage' | 'heal' | 'status' | 'draw' | 'discard' | 'search' | 'switch' | 'energy' | 'knockout' | 'counter' | 'prize';
   message: string;
   data?: Record<string, unknown>;
 }

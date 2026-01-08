@@ -1,11 +1,43 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useGameState } from './hooks/useGameState';
+import { useGameActions } from './hooks/useGameActions';
 import { GameBoard } from './components/GameBoard';
+import { ActionPanel } from './components/ActionPanel';
 import { GameStateLoader, GameStateLoaderInline } from './components/GameStateLoader';
 
 export default function GamePage() {
-  const { gameState, isLoading, error, loadFromJson, loadMockState, clearState } = useGameState();
+  const { gameState: loadedState, isLoading, error, loadFromJson, loadMockState, clearState } = useGameState();
+
+  // Use the game actions hook for effect execution
+  const {
+    gameState,
+    setGameState,
+    isExecuting,
+    pendingChoice,
+    actionLog,
+    lastMessages,
+    dealDamage,
+    drawCards,
+    applyStatus,
+    healPokemon,
+    resolveChoice,
+    clearLog,
+  } = useGameActions(null);
+
+  // Sync loaded state with action state
+  useEffect(() => {
+    if (loadedState) {
+      setGameState(loadedState);
+    }
+  }, [loadedState, setGameState]);
+
+  const handleClearState = () => {
+    clearState();
+    setGameState(null);
+    clearLog();
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -15,12 +47,12 @@ export default function GamePage() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-xl font-bold text-gray-900">PTCG Game Viewer</h1>
-              <p className="text-sm text-gray-500">Visualize Pokemon TCG game states</p>
+              <p className="text-sm text-gray-500">Visualize and test Pokemon TCG effects</p>
             </div>
             {gameState && (
               <GameStateLoaderInline
                 onLoadMock={loadMockState}
-                onClear={clearState}
+                onClear={handleClearState}
                 hasState={!!gameState}
               />
             )}
@@ -33,7 +65,28 @@ export default function GamePage() {
         {isLoading ? (
           <LoadingState />
         ) : gameState ? (
-          <GameBoard gameState={gameState} />
+          <div className="flex gap-6">
+            {/* Game Board */}
+            <div className="flex-1">
+              <GameBoard gameState={gameState} />
+            </div>
+
+            {/* Action Panel */}
+            <div className="w-80 flex-shrink-0">
+              <ActionPanel
+                isExecuting={isExecuting}
+                pendingChoice={pendingChoice}
+                lastMessages={lastMessages}
+                actionLog={actionLog}
+                onDealDamage={dealDamage}
+                onDrawCards={drawCards}
+                onApplyStatus={applyStatus}
+                onHealPokemon={healPokemon}
+                onResolveChoice={resolveChoice}
+                onClearLog={clearLog}
+              />
+            </div>
+          </div>
         ) : (
           <EmptyState
             onLoad={loadFromJson}
