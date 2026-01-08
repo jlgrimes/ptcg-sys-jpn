@@ -1,54 +1,27 @@
 import { CardDetails, Ability, Move } from '@/types/pokemon';
 import PokemonCard from './PokemonCard';
-
-function getBaseUrl() {
-  if (process.env.VERCEL_URL) {
-    return `https://${process.env.VERCEL_URL}`;
-  }
-  return `http://localhost:${process.env.PORT || 3000}`;
-}
-
-interface DbCard {
-  id: string;
-  name: string;
-  hp: string | null;
-  type: string | null;
-  cardEffect: string | null;
-  abilities: Ability[] | null;
-  moves: Move[] | null;
-  weakness: string | null;
-  resistance: string | null;
-  retreatCost: string | null;
-  evolution: string[] | null;
-  setName: string | null;
-  setCode: string | null;
-  imageUrl: string | null;
-}
+import { getPrisma } from '@/app/lib/db';
 
 async function getCards(ids: string[]): Promise<CardDetails[]> {
-  const res = await fetch(`${getBaseUrl()}/api/cards?ids=${ids.join(',')}`, {
-    cache: 'no-store',
+  const prisma = getPrisma();
+
+  const cards = await prisma.card.findMany({
+    where: { id: { in: ids } },
   });
 
-  if (!res.ok) {
-    throw new Error('Failed to fetch cards');
-  }
-
-  const data = await res.json();
-
   // Transform database records to CardDetails format
-  return data.cards.map((card: DbCard) => ({
+  return cards.map((card) => ({
     name: card.name,
     cardId: card.setCode || card.id,
     hp: card.hp || '',
     type: card.type || 'colorless',
     cardEffect: card.cardEffect || '',
-    abilities: (card.abilities as Ability[]) || [],
-    moves: (card.moves as Move[]) || [],
+    abilities: (card.abilities as unknown as Ability[]) || [],
+    moves: (card.moves as unknown as Move[]) || [],
     weakness: card.weakness || '',
     resistance: card.resistance || '',
     retreatCost: card.retreatCost || '',
-    evolution: (card.evolution as string[]) || [],
+    evolution: (card.evolution as unknown as string[]) || [],
     set: card.setName || '',
     imageUrl: card.imageUrl || '',
   }));
