@@ -19,7 +19,8 @@
       "Bash(grep:*)",
       "Bash(npx tsx:*)",
       "Bash(npx prisma init:*)",
-      "Bash(npx prisma generate:*)"
+      "Bash(npx prisma generate:*)",
+      "Bash(node_modules/.bin/jest:*)"
     ]
   }
 }
