@@ -17,7 +17,9 @@
       "Bash(timeout 30 npm run dev:*)",
       "Bash(npm run lint)",
       "Bash(grep:*)",
-      "Bash(npx tsx:*)"
+      "Bash(npx tsx:*)",
+      "Bash(npx prisma init:*)",
+      "Bash(npx prisma generate:*)"
     ]
   }
 }

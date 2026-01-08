@@ -1,8 +1,7 @@
-'use client';
-
-import { useState } from 'react';
+import Image from 'next/image';
 import { CardInstance, PokemonState } from '@/app/lib/notation/training-format';
 import { cn } from '@/lib/utils';
+import { getCardImageUrl } from '@/app/lib/card-images';
 
 interface CardDisplayProps {
   card: CardInstance | null;
@@ -40,13 +39,13 @@ const statusInfo: Record<string, { color: string; label: string }> = {
 };
 
 const sizeClasses = {
-  sm: { card: 'w-16 h-22', text: 'text-[8px]', badge: 'text-[6px] px-0.5' },
-  md: { card: 'w-24 h-33', text: 'text-xs', badge: 'text-[8px] px-1' },
-  lg: { card: 'w-32 h-44', text: 'text-sm', badge: 'text-[10px] px-1' },
+  sm: { card: 'w-16 h-22', text: 'text-[8px]', badge: 'text-[6px] px-0.5', width: 64, height: 88 },
+  md: { card: 'w-24 h-33', text: 'text-xs', badge: 'text-[8px] px-1', width: 96, height: 132 },
+  lg: { card: 'w-32 h-44', text: 'text-sm', badge: 'text-[10px] px-1', width: 128, height: 176 },
 };
 
 /**
- * Display a single card with optional Pokemon state overlay
+ * Display a single card with optional Pokemon state overlay (Server Component)
  */
 export function CardDisplay({
   card,
@@ -56,13 +55,10 @@ export function CardDisplay({
   className,
   showOverlay = true,
 }: CardDisplayProps) {
-  const [imageError, setImageError] = useState(false);
   const sizes = sizeClasses[size];
 
-  // Construct image URL (fallback to pokemon-card.com pattern)
-  const imageUrl = card
-    ? `https://www.pokemon-card.com/assets/images/card_images/large/${card.cardId}.png`
-    : null;
+  // Get image URL from blob storage (server-side)
+  const imageUrl = card ? getCardImageUrl(card.cardId) : null;
 
   // Handle face-down cards first (works even with null card for opponent's hand)
   if (faceDown) {
@@ -103,28 +99,30 @@ export function CardDisplay({
       <div
         className={cn(
           sizes.card,
-          'rounded-lg overflow-hidden shadow-md',
+          'relative rounded-lg overflow-hidden shadow-md',
           'border border-gray-200 bg-gray-100',
           'transition-transform hover:scale-105'
         )}
       >
-        {imageUrl && !imageError ? (
-          <img
+        {/* Fallback content (shows if image fails to load) */}
+        <div className="absolute inset-0 flex flex-col items-center justify-center p-1 bg-gradient-to-b from-gray-100 to-gray-200">
+          <span className={cn(sizes.text, 'text-gray-700 font-medium text-center')}>
+            {card.name}
+          </span>
+          <span className={cn(sizes.badge, 'text-gray-500 mt-1')}>
+            {card.cardId}
+          </span>
+        </div>
+        {/* Card image from blob storage */}
+        {imageUrl && (
+          <Image
             src={imageUrl}
             alt={card.name}
-            className="w-full h-full object-cover"
-            onError={() => setImageError(true)}
+            width={sizes.width}
+            height={sizes.height}
+            className="relative w-full h-full object-cover"
             loading="lazy"
           />
-        ) : (
-          <div className="w-full h-full flex flex-col items-center justify-center p-1 bg-gradient-to-b from-gray-100 to-gray-200">
-            <span className={cn(sizes.text, 'text-gray-700 font-medium text-center')}>
-              {card.name}
-            </span>
-            <span className={cn(sizes.badge, 'text-gray-500 mt-1')}>
-              {card.cardId}
-            </span>
-          </div>
         )}
       </div>
 

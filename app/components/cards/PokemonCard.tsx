@@ -1,26 +1,6 @@
 import { CardDetails } from '@/types/pokemon';
-import { Suspense } from 'react';
 import { parseEffectText } from '@/app/lib/effect-parser';
 import { Effect, Target } from '@/app/lib/effects/types';
-
-function getBaseUrl() {
-  if (process.env.VERCEL_URL) {
-    return `https://${process.env.VERCEL_URL}`;
-  }
-  return `http://localhost:${process.env.PORT || 3000}`;
-}
-
-async function getCard(id: number) {
-  const res = await fetch(`${getBaseUrl()}/api/pokemon-card/${id}`, {
-    // cache: 'force-cache',
-  });
-
-  if (!res.ok) {
-    throw new Error('Failed to fetch card');
-  }
-
-  return res.json();
-}
 
 function EffectDisplay({ effects }: { effects: Effect[] }) {
   return (
@@ -103,46 +83,36 @@ function EffectDisplay({ effects }: { effects: Effect[] }) {
   );
 }
 
-function CardSkeleton() {
-  return (
-    <div className='border rounded-lg p-4 shadow-lg bg-white animate-pulse'>
-      <div className='h-8 bg-gray-200 rounded mb-4'></div>
-      <div className='grid grid-cols-2 gap-2'>
-        <div className='space-y-2'>
-          <div className='h-4 bg-gray-200 rounded w-3/4'></div>
-          <div className='h-4 bg-gray-200 rounded w-1/2'></div>
-          <div className='h-4 bg-gray-200 rounded w-2/3'></div>
-        </div>
-        <div className='space-y-2'>
-          <div className='h-4 bg-gray-200 rounded w-3/4'></div>
-          <div className='h-4 bg-gray-200 rounded w-2/3'></div>
-        </div>
-      </div>
-    </div>
-  );
+
+interface CardContentProps {
+  card: CardDetails;
+  parseEffects?: boolean; // Whether to parse effect text (can cause SSR issues)
 }
 
-async function CardContent({ id }: { id: number }) {
-  const card: CardDetails = await getCard(id);
+async function CardContent({ card, parseEffects = false }: CardContentProps) {
+  // Only parse effects if explicitly requested (can cause stack overflow in SSR)
+  const abilityEffects = parseEffects
+    ? await Promise.all(
+        card.abilities.map(async ability => ({
+          name: ability.name,
+          effects: await parseEffectText(ability.description),
+        }))
+      )
+    : card.abilities.map(ability => ({ name: ability.name, effects: [] }));
 
-  // Parse effects for abilities, card effect, and moves
-  const abilityEffects = await Promise.all(
-    card.abilities.map(async ability => ({
-      name: ability.name,
-      effects: await parseEffectText(ability.description),
-    }))
-  );
+  const cardEffects =
+    parseEffects && card.cardEffect
+      ? await parseEffectText(card.cardEffect)
+      : [];
 
-  const cardEffects = card.cardEffect
-    ? await parseEffectText(card.cardEffect)
-    : [];
-
-  const moveEffects = await Promise.all(
-    card.moves.map(async move => ({
-      ...move,
-      effects: await parseEffectText(move.description),
-    }))
-  );
+  const moveEffects = parseEffects
+    ? await Promise.all(
+        card.moves.map(async move => ({
+          ...move,
+          effects: await parseEffectText(move.description),
+        }))
+      )
+    : card.moves.map(move => ({ ...move, effects: [] }));
 
   return (
     <div className='border rounded-lg p-4 shadow-lg bg-white'>
@@ -227,10 +197,11 @@ async function CardContent({ id }: { id: number }) {
   );
 }
 
-export default function PokemonCard({ id }: { id: number }) {
-  return (
-    <Suspense fallback={<CardSkeleton />}>
-      <CardContent id={id} />
-    </Suspense>
-  );
+interface PokemonCardProps {
+  card: CardDetails;
+  parseEffects?: boolean;
+}
+
+export default async function PokemonCard({ card, parseEffects = false }: PokemonCardProps) {
+  return <CardContent card={card} parseEffects={parseEffects} />;
 }

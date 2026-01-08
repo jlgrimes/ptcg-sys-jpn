@@ -1,0 +1,32 @@
+// Pokemon TCG Card Database Schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Card {
+  id            String   @id // The card ID from pokemon-card.com (e.g., "47001")
+  name          String   // Card name (Japanese)
+  hp            String?  // HP value (null for trainer/energy cards)
+  type          String?  // Pokemon type (fire, water, etc.)
+  cardEffect    String?  // Effect text for trainer/energy cards
+  abilities     Json     @default("[]") // Array of Ability objects
+  moves         Json     @default("[]") // Array of Move objects
+  weakness      String?
+  resistance    String?
+  retreatCost   String?
+  evolution     Json     @default("[]") // Array of evolution names
+  setName       String?  // Card set name
+  setCode       String?  // Card set code (e.g., "XY4 043/088")
+  imageUrl      String?  // Original image URL from pokemon-card.com
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([name])
+  @@index([type])
+  @@index([setName])
+}
